@@ -8,7 +8,7 @@ Github Desktop: https://desktop.github.com/
 
 Clone Repository:  
 1 Open Github Desktop  
-2 Clone a Repository from the Internet  
+2 Clone a Repository from the Internet: Link= https://github.com/valnim/PMS2022
 3 Choose local path (! dont't use One Drive folder, as sync is done over Github)  
 
 Work with Git:  
