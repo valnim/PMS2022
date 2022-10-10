@@ -3,8 +3,11 @@ For work on the Software for the Arduino and Nucleus Prozessor.
 
 Recommended Software:
 Arduino Studio: https://www.arduino.cc/en/software 
-
 Github Desktop: https://desktop.github.com/
+
+1. Create Github Account  
+2. Get Acces to Github Repo (Send github username to Valentin)
+3. Install local Git Software: eg.: Github Desktop: https://desktop.github.com/
 
 Clone Repository:  
 1 Open Github Desktop  
