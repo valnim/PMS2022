@@ -7,12 +7,13 @@
 // Motor control global variables: 
   int motorSpeed;                          // Motor speed 0..255
   bool motorDirection;                      // Forward (True) or reverse (False)
+  int idx;
   
 void setup() 
 {
-  //other stuff....
- motorSpeed = 0;
- motorDirection = true;
+  idx = 0;
+  motorSpeed = 255;
+  motorDirection = true;
   // Declare digital output pins:
   pinMode(controlPin1A, OUTPUT);      // 1A
   pinMode(controlPin2A, OUTPUT);      // 2A
@@ -20,18 +21,15 @@ void setup()
  
   digitalWrite(ENablePin, LOW);       // motor off
   Serial.begin(9600);
-  
-
-
 }
 
-void SetMotorControl()
+void SetMotorControl(bool mD, int mS )
 {
- if (motorDirection)            // Forward
+ if (mD)            // Forward
    {
       digitalWrite(controlPin1A, HIGH);
       digitalWrite(controlPin2A, LOW);
-      //Serial.write("vor");
+      Serial.write("vor");
       
    }
  else                                 // Reverse
@@ -40,28 +38,58 @@ void SetMotorControl()
       digitalWrite(controlPin2A, HIGH);
       //Serial.write("reverse");
    } 
- analogWrite(ENablePin, motorSpeed);  // Speed
+ analogWrite(ENablePin, mS);  // Speed
+}
+
+void SetMotorStop(bool mD, int reverseTime)
+{
+  if (mD)
+  {
+    digitalWrite(controlPin1A, LOW);
+    digitalWrite(controlPin2A, HIGH);
+    delay(reverseTime);
+    digitalWrite(controlPin2A, LOW);
+  }
+  else
+  {
+    digitalWrite(controlPin1A, HIGH);
+    digitalWrite(controlPin2A, LOW);
+    delay(reverseTime);
+    digitalWrite(controlPin1A, LOW);
+  }
+  analogWrite(ENablePin, 0);
 }
 
 void loop() 
 {  
  //Motorsteuerung Versuch
- delay(200);
- motorSpeed +=10;
-
- if (motorSpeed > 240)
+ //delay(200);
+ //motorSpeed +=10;
+ //motorSpeed = 255;
+// if (motorSpeed > 240)
+// {
+//  //delay(5000);
+//  motorSpeed = 0;
+//  if(motorDirection)
+//  {
+//    motorDirection = false;
+//  }
+//  else
+//  {
+//    motorDirection = true;
+//  }
+// }
+ SetMotorControl(motorDirection, motorSpeed);
+ delay(2000);
+ SetMotorStop(motorDirection, 80);
+ if (motorDirection)
  {
-  motorSpeed = 0;
-  if(motorDirection)
-  {
-    motorDirection = false;
-  }
-  else
-  {
-    motorDirection = true;
-  }
+  motorDirection = false;
  }
- SetMotorControl();
- 
+ else
+ {
+  motorDirection = true;
+ }
+ delay(1000);
  
 }
