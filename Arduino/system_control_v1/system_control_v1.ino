@@ -4,25 +4,35 @@
 // Motor control digital output pins defined as global constants
   const int mo1_controlPin1A = 2;                
   const int mo1_controlPin2A = 5;                 
-  const int mo1_enablePin = 9;         
+  const int mo1_enablePin = 9;      
   Elego_Motor mo1(mo1_controlPin1A, mo1_controlPin2A, mo1_enablePin);
 
+  const int mo2_controlPin1A = 8;                
+  const int mo2_controlPin2A = 10;                 
+  const int mo2_enablePin = 11;      
+  Elego_Motor mo2(mo2_controlPin1A, mo2_controlPin2A, mo2_enablePin);
 
-// Input bins 
-  const int bstart_Pin = 4;         // Button Start Pin      
-  const int ledPin =  13;
+
+// Input pins 
+  const int bstart_Pin = 4;         // Button Start Pin
+  const int bcount_Pin = 7;         // Button provisional count  
+  const int ledPin =  13;           // Indication LED
 
 // Motor control global variables: 
   //Motor 1
   int mo1_mS = 250;                 // Motor speed 0..255
   bool mo1_mD = true;               // Forward (true) or reverse (false)
+  int mo2_mS = 250;                 // Motor speed 0..255
+  bool mo2_mD = false;               // Forward (true) or reverse (false)
 
 // Button Variables
   int bstart_State = 0;             // Button Start Default State
+  int bcount_State = 0;             // Button Count Default State
+  int bcount_lastState = 0;         // Button Count Last State
 
 // General Variables
   int mode = 0;                     // System Control Mode
-  int time = 0;                     // Runtime [s]
+  int count = 0;                    // Counter
 
 void setup() 
 {
@@ -30,26 +40,45 @@ void setup()
   
   // Decleare digital input pins:
   pinMode(bstart_Pin, INPUT);              // Button Start
+  pinMode(bcount_Pin, INPUT);              // Counter Button
   pinMode(ledPin, OUTPUT);
 }
 
-int runtime() {
-  static uint8_t rolloverCounter = 0;
-  static uint32_t lastMillis = 0;
-  uint32_t currentMillis = millis();
-  if (currentMillis < lastMillis) {       // check millis overflow
-    rolloverCounter++;
-  }
-  lastMillis = currentMillis;
-  uint32_t secs = (0xFFFFFFFF / 1000 ) * rolloverCounter + (currentMillis / 1000);
-  return secs;
-}
+// int runtime() {
+//   static uint8_t rolloverCounter = 0;
+//   static uint32_t lastMillis = 0;
+//   uint32_t currentMillis = millis();
+//   if (currentMillis < lastMillis) {       // check millis overflow
+//     rolloverCounter++;
+//   }
+//   lastMillis = currentMillis;
+//   uint32_t secs = (0xFFFFFFFF / 1000 ) * rolloverCounter + (currentMillis / 1000);
+//   return secs;
+// }
 
+void counter(){
+  bcount_State = digitalRead(bcount_Pin);
+  // compare the buttonState to its previous state
+  if (bcount_State != bcount_lastState) {
+    // if the state has changed, increment the counter
+    if (bcount_State == HIGH) 
+    {
+      // if the current state is HIGH then the button went from off to on:
+      count++;
+    }
+    // Delay a little bit to avoid bouncing
+    delay(50);
+  }
+  // save the current state as the last state, for next time through the loop
+  bcount_lastState = bcount_State;
+}
 
 void mode_one()
 {
   mo1.setDirection(mo1_mD);
   mo1.setSpeed(mo1_mS);
+  mo2.setDirection(mo2_mD);
+  mo2.setSpeed(mo2_mS);
 }
 
 void loop() 
@@ -63,22 +92,23 @@ void loop()
     mode = 1;
 
   }
-  else if (time >= 2 && bstart_State == HIGH)
+  else if (count >= 5)
   {
     mode = 2;
   }
-  
 
   if (mode == 1){
     mode_one();
     digitalWrite(ledPin, HIGH);
-    time = runtime();
+    counter();
   }
   else if (mode == 2){
     mo1.stop(80);
+    mo2.stop(80);
     digitalWrite(ledPin, LOW);
     mode = 0;
+    count = 0;
   }
-
+  Serial.println(count);
   
 }
