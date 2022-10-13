@@ -33,9 +33,10 @@ boolean moveClockwise = true;
 void setup() {
   
   // let's just set up a serial connection and test print to the console
-  
+  stepper.setRpm(16);
   Serial.begin(9600);
   Serial.println("Ready to start moving!");
+  
 }
 
 void loop() {
@@ -43,7 +44,7 @@ void loop() {
   // let's move a full rotation (4096 mini-steps)
   // we'll go step-by-step using the step() function
   
-  for (int s=0; s<4096; s++){
+  for (int s=0; s<4096*5; s++){
     // this will loop 4096 times
     // 4096 steps = full rotation using default values
     /* Note:
