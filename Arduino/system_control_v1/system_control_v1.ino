@@ -27,13 +27,6 @@
 void setup() 
 {
   Serial.begin(9600); // Initialize Serial
-
-  // Declare digital output pins:
-
-  // pinMode(mo1_controlPin1A, OUTPUT);      // Motor 1/2 1A
-  // pinMode(mo1_controlPin2A, OUTPUT);      // Motor 1/2 2A
-  // pinMode(mo1_enablePin, OUTPUT);         // Motor 1/2 EN1,2
-  // digitalWrite(mo1_enablePin, LOW);       // Motor 1/2 Motor off
   
   // Decleare digital input pins:
   pinMode(bstart_Pin, INPUT);              // Button Start
@@ -52,46 +45,9 @@ int runtime() {
   return secs;
 }
 
-// void SetMotorControl(bool mD, int mS, int controlPin1A, int controlPin2A, int enablePin )
-// {
-//  if (mD)            // Forward
-//    {
-//       digitalWrite(controlPin1A, HIGH);
-//       digitalWrite(controlPin2A, LOW);
-//       //Serial.println(mS);
-      
-//    }
-//  else               // Reverse
-//    {
-//       digitalWrite(controlPin1A, LOW);
-//       digitalWrite(controlPin2A, HIGH);
-//       //Serial.println(mS);
-//    } 
-//  analogWrite(enablePin, mS);  // Speed
-// }
-
-// void SetMotorStop(bool mD, int reverseTime, int controlPin1A, int controlPin2A, int enablePin )
-// {
-//   if (mD)
-//   {
-//     digitalWrite(controlPin1A, LOW);
-//     digitalWrite(controlPin2A, HIGH);
-//     delay(reverseTime);
-//     digitalWrite(controlPin2A, LOW);
-//   }
-//   else
-//   {
-//     digitalWrite(controlPin1A, HIGH);
-//     digitalWrite(controlPin2A, LOW);
-//     delay(reverseTime);
-//     digitalWrite(controlPin1A, LOW);
-//   }
-//   analogWrite(enablePin, 0);
-// }
 
 void mode_one()
 {
-  //SetMotorControl(mo1_mD, mo1_mS, mo1_controlPin1A, mo1_controlPin2A, mo1_enablePin);
   mo1.setDirection(mo1_mD);
   mo1.setSpeed(mo1_mS);
 }
@@ -119,7 +75,6 @@ void loop()
     time = runtime();
   }
   else if (mode == 2){
-    //SetMotorStop(!mo1_mD, 80, mo1_controlPin1A, mo1_controlPin2A, mo1_enablePin);
     mo1.stop(80);
     digitalWrite(ledPin, LOW);
     mode = 0;
