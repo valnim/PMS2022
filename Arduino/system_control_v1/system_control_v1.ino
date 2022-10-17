@@ -22,9 +22,9 @@
 
 // Motor control global variables: 
   //Motor 1
-  int mo1_mS = 250;                 // Motor speed 0..255
-  bool mo1_mD = true;               // Forward (true) or reverse (false)
-  int mo2_mS = 250;                 // Motor speed 0..255
+  int mo1_mS = 254;                 // Motor speed 0..255
+  bool mo1_mD = false;               // Forward (true) or reverse (false)
+  int mo2_mS = 254;                 // Motor speed 0..255
   bool mo2_mD = false;               // Forward (true) or reverse (false)
 
 // Button Variables
