@@ -33,6 +33,7 @@
 // General Variables
   int mode = 0;                     // System Control Mode
   int count = 0;                    // Counter
+  int count_max = 5;                // Max goods count in Transport Box
 
 void setup() 
 {
@@ -73,8 +74,7 @@ void counter(){
   bcount_lastState = bcount_State;
 }
 
-void mode_one()
-{
+void mode_one(){
   mo1.setDirection(mo1_mD);
   mo1.setSpeed(mo1_mS);
   mo2.setDirection(mo2_mD);
@@ -87,27 +87,41 @@ void loop()
   // read the state of the pushbutton value:
   bstart_State = digitalRead(bstart_Pin);
 
-  if (bstart_State == HIGH && mode == 0)
+  // Mode Switch Logic and Mode Logic that has to happen once
+  if (bstart_State == HIGH && mode == 0)  // 0-1 Requirement: Button Start
   {
     mode = 1;
-
-  }
-  else if (count >= 5)
-  {
-    mode = 2;
-  }
-
-  if (mode == 1){
     mode_one();
     digitalWrite(ledPin, HIGH);
-    counter();
   }
-  else if (mode == 2){
+  else if (count >= count_max)                    // 1-2 Requirement: Counter reaches count_max
+  {
+    mode = 2;
     mo1.stop(80);
     mo2.stop(80);
     digitalWrite(ledPin, LOW);
     mode = 0;
     count = 0;
+  }
+//  else if ()                    // 3-4 Requirement: 
+//  {
+//    mode = 3;
+//  }
+
+  // Mode Logic that has to be run each cycle
+  if (mode == 1){    // Motor 1 for Transport System 1 and Divider is ON, Counter is counting goods
+    counter();
+  }
+  else if (mode == 2){    // After counter reaches desired value the transportsystem 1 stops, counter is resette
+  }
+  else if (mode == 3){
+    // Todo implment Actuators for Mode 3
+  }
+  else if (mode == 4){
+    // Todo implment Actuators for Mode 4
+  }
+  else if (mode == 5){
+    // Todo implment Actuators for Mode 5
   }
   Serial.println(count);
   
