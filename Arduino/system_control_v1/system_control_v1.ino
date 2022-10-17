@@ -14,7 +14,6 @@
 
 // Input pins 
   const int bstart_Pin = 4;         // Button Start Pin
-  //const int bcount_Pin = 7;         // Button provisional count
   const int pResistor = A0;         // Photoresistor at Arduino analog pin A0
 
 // Output pins
@@ -88,7 +87,7 @@ void loop()
     mode_one();
     digitalWrite(ledPin, HIGH);
   }
-  else if (count >= count_max)                    // 1-2 Requirement: Counter reaches count_max
+  else if (count >= count_max && mode == 1)                    // 1-2 Requirement: Counter reaches count_max
   {
     mode = 2;
     mo1.stop(80);
