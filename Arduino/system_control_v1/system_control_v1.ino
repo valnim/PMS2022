@@ -12,11 +12,14 @@
   const int mo2_enablePin = 11;      
   Elego_Motor mo2(mo2_controlPin1A, mo2_controlPin2A, mo2_enablePin);
 
-
 // Input pins 
   const int bstart_Pin = 4;         // Button Start Pin
-  const int bcount_Pin = 7;         // Button provisional count  
+  //const int bcount_Pin = 7;         // Button provisional count
+  const int pResistor = A0;         // Photoresistor at Arduino analog pin A0
+
+// Output pins
   const int ledPin =  13;           // Indication LED
+
 
 // Motor control global variables: 
   //Motor 1
@@ -27,8 +30,8 @@
 
 // Button Variables
   int bstart_State = 0;             // Button Start Default State
-  int bcount_State = 0;             // Button Count Default State
-  int bcount_lastState = 0;         // Button Count Last State
+  int count_State = 0;             // Button Count Default State
+  int count_lastState = 0;         // Button Count Last State
 
 // General Variables
   int mode = 0;                     // System Control Mode
@@ -40,38 +43,29 @@ void setup()
   Serial.begin(9600); // Initialize Serial
   
   // Decleare digital input pins:
-  pinMode(bstart_Pin, INPUT);              // Button Start
-  pinMode(bcount_Pin, INPUT);              // Counter Button
-  pinMode(ledPin, OUTPUT);
+  pinMode(bstart_Pin, INPUT);       // Button Start
+  pinMode(ledPin, OUTPUT);          // Indication LED
+  pinMode(pResistor, INPUT);        // Set pResistor 
 }
 
-// int runtime() {
-//   static uint8_t rolloverCounter = 0;
-//   static uint32_t lastMillis = 0;
-//   uint32_t currentMillis = millis();
-//   if (currentMillis < lastMillis) {       // check millis overflow
-//     rolloverCounter++;
-//   }
-//   lastMillis = currentMillis;
-//   uint32_t secs = (0xFFFFFFFF / 1000 ) * rolloverCounter + (currentMillis / 1000);
-//   return secs;
-// }
-
 void counter(){
-  bcount_State = digitalRead(bcount_Pin);
-  // compare the buttonState to its previous state
-  if (bcount_State != bcount_lastState) {
+  if (analogRead(pResistor) < 550){
+    count_State = HIGH;
+  }
+  else{
+    count_State = LOW;
+  }
+  // compare the bcount_State to its previous state
+  if (count_State != count_lastState) {
     // if the state has changed, increment the counter
-    if (bcount_State == HIGH) 
+    if (count_State == HIGH) 
     {
       // if the current state is HIGH then the button went from off to on:
       count++;
     }
-    // Delay a little bit to avoid bouncing
-    delay(50);
   }
   // save the current state as the last state, for next time through the loop
-  bcount_lastState = bcount_State;
+  count_lastState = count_State;
 }
 
 void mode_one(){
@@ -111,6 +105,8 @@ void loop()
   // Mode Logic that has to be run each cycle
   if (mode == 1){    // Motor 1 for Transport System 1 and Divider is ON, Counter is counting goods
     counter();
+    Serial.println(count);
+    Serial.println(analogRead(pResistor));
   }
   else if (mode == 2){    // After counter reaches desired value the transportsystem 1 stops, counter is resette
   }
@@ -123,6 +119,6 @@ void loop()
   else if (mode == 5){
     // Todo implment Actuators for Mode 5
   }
-  Serial.println(count);
+  
   
 }
