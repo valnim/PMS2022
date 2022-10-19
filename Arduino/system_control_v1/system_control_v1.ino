@@ -37,6 +37,13 @@
   int count = 0;                    // Counter
   int count_max = 5;                // Max goods count in Transport Box
 
+  bool calibrated = false;          // Light barrier calibration status
+  int threshold = 0;                // Light barrier threshold
+  const int threshold_offset = 150; // Threshold offset
+  const int num_calibrate = 10;    // Number of values that are middled
+  int idx = 0;                      // Index variable
+  int value = 0;
+
 void setup() 
 {
   Serial.begin(9600); // Initialize Serial
@@ -47,8 +54,23 @@ void setup()
   pinMode(pResistor, INPUT);        // Set pResistor 
 }
 
+void calibrate()
+{
+  Serial.println(value);
+  threshold = threshold + value;
+  idx = idx + 1;
+  if (idx >= num_calibrate){
+    threshold = threshold / num_calibrate;
+    Serial.println("Sensor calbirated");
+    Serial.println(threshold);
+    threshold = threshold - threshold_offset;
+    calibrated = true; 
+  }
+  delay(100);
+}
+
 void counter(){
-  if (analogRead(pResistor) < 550){
+  if (value < threshold){
     count_State = HIGH;
   }
   else{
@@ -67,7 +89,8 @@ void counter(){
   count_lastState = count_State;
 }
 
-void mode_one(){
+void ts1_on()   // Starts Transport System 1
+{
   mo1.setDirection(mo1_mD);
   mo1.setSpeed(mo1_mS);
   mo2.setDirection(mo2_mD);
@@ -76,41 +99,45 @@ void mode_one(){
 
 void loop() 
 {  
+  //Serial.println(mode);
   
   // read the state of the pushbutton value:
   bstart_State = digitalRead(bstart_Pin);
 
   // Mode Switch Logic and Mode Logic that has to happen once
-  if (bstart_State == HIGH && mode == 0)  // 0-1 Requirement: Button Start
+  if (bstart_State == HIGH && mode == 0)                      //0-1 Requirement: Button Start
   {
     mode = 1;
-    mode_one();
-    digitalWrite(ledPin, HIGH);
+    Serial.println("Begin Light Barrier Calibration:");
   }
-  else if (count >= count_max && mode == 1)                    // 1-2 Requirement: Counter reaches count_max
+  if (calibrated && mode == 1)                                //1-2 Sensor Calibrated
   {
     mode = 2;
+    ts1_on();
+    digitalWrite(ledPin, HIGH);
+  }
+  else if (count >= count_max && mode == 2)                   // 2-3 Requirement: Counter reaches count_max
+  {
+    mode = 3;
     mo1.stop(80);
     mo2.stop(80);
     digitalWrite(ledPin, LOW);
     mode = 0;
     count = 0;
   }
-//  else if ()                    // 3-4 Requirement: 
-//  {
-//    mode = 3;
-//  }
-
+ 
   // Mode Logic that has to be run each cycle
-  if (mode == 1){    // Motor 1 for Transport System 1 and Divider is ON, Counter is counting goods
+  if (mode == 1){
+    value = analogRead(pResistor);
+    calibrate();
+  }
+  else if (mode == 2){    // Motor 1 for Transport System 1 and Divider is ON, Counter is counting goods
+    value = analogRead(pResistor);
     counter();
     Serial.println(count);
-    Serial.println(analogRead(pResistor));
+    Serial.println(value);
   }
-  else if (mode == 2){    // After counter reaches desired value the transportsystem 1 stops, counter is resette
-  }
-  else if (mode == 3){
-    // Todo implment Actuators for Mode 3
+  else if (mode == 3){    // After counter reaches desired value the transportsystem 1 stops, counter is resette
   }
   else if (mode == 4){
     // Todo implment Actuators for Mode 4
