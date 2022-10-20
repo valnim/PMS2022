@@ -22,9 +22,9 @@
 
 // Motor control global variables: 
   //Motor 1
-  int mo1_mS = 254;                 // Motor speed 0..255
+  int mo1_mS = 120;                 // Motor speed 0..255
   bool mo1_mD = false;               // Forward (true) or reverse (false)
-  int mo2_mS = 254;                 // Motor speed 0..255
+  int mo2_mS = 120;                 // Motor speed 0..255
   bool mo2_mD = false;               // Forward (true) or reverse (false)
 
 // Button Variables
@@ -35,12 +35,12 @@
 // General Variables
   int mode = 0;                     // System Control Mode
   int count = 0;                    // Counter
-  int count_max = 5;                // Max goods count in Transport Box
+  int count_max = 50;                // Max goods count in Transport Box
 
   bool calibrated = false;          // Light barrier calibration status
   int threshold = 0;                // Light barrier threshold
-  const int threshold_offset = 150; // Threshold offset
-  const int num_calibrate = 10;    // Number of values that are middled
+  const int threshold_offset = 100; // Threshold offset, the lower the offset the higher the sensitivity
+  const int num_calibrate = 10;     // Number of values that are middled
   int idx = 0;                      // Index variable
   int value = 0;
 
@@ -99,6 +99,7 @@ void ts1_on()   // Starts Transport System 1
 
 void loop() 
 {  
+  //Serial.println("Mode:");
   //Serial.println(mode);
   
   // read the state of the pushbutton value:
