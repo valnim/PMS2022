@@ -10,12 +10,12 @@ const int button2 = 3;  // Reference Button Pin
 const int ledPin =  13; // Indicatior LED Pin
 
 // Motor variables
-int mo1Speed = 150;             // Motor 1 Base Speed 
+int mo1Speed = 100;             // Motor 1 Base Speed 
 int mo1MaxSpeedMult = 2;        // Motor 1 Max Speed Multiplier
 int mo1Accel = 20000;           // Motor 1 Acceleration
 int m01Direction = 1;           // Motor 1 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int mo1Pos1 = stepsPerRev*2;    // Position 1 in relation to Reference Point
-int mo1Pos2 = stepsPerRev*3;    // Position 2 in relation to Reference Point
+int mo1Pos1 = stepsPerRev*0.5;    // Position 1 in relation to Reference Point
+int mo1Pos2 = stepsPerRev*1.25;    // Position 2 in relation to Reference Point
 
 // initialize the stepper library on pins 12 through 9:
 AccelStepper stepper1(4, 12, 11, 10, 9);    // Definition of Stepper Motor (StepperType=4, PINA1 = 12, PINA2 = 11, PINA3 = 10, PINA4 = 9)
@@ -62,7 +62,7 @@ void loop() {
     // Stop Motor at Pos 1
     stepper1.stop();
     Serial.println(abs(stepper1.currentPosition()));  // Log Current Position
-    delay(1000);  // Wait at Position 1
+    delay(2000);  // Wait at Position 1
     // Setup motor settings for movement towards Pos2
     stepper1.setAcceleration(mo1Accel);
     stepper1.setMaxSpeed(m01Direction*mo1Speed*2);
