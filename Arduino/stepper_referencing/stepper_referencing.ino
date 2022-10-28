@@ -4,10 +4,21 @@ const int stepsPerRev = 200;  // change this to fit the number of steps per revo
 
 // Input Pins
 const int button1 = 2;  // Start Pin
-const int button2 = 3;  // Reference Button Pin
+const int button2 = 13;  // Reference Button Pin
 
 // Output Pins
-const int ledPin =  13; // Indicatior LED Pin
+//const int ledPin =  13; // Indicatior LED Pin
+
+// Motor Pins
+const int m01PinA1 = 12;
+const int m01PinA2 = 11;
+const int m01PinA3 = 10;
+const int m01PinA4 = 9;
+
+const int m02PinA1 = 7;
+const int m02PinA2 = 6;
+const int m02PinA3 = 5;
+const int m02PinA4 = 3;
 
 // Motor variables
 int mo1Speed = 100;             // Motor 1 Base Speed 
@@ -17,8 +28,16 @@ int m01Direction = 1;           // Motor 1 Standard Direction Variable (1 - Cloc
 int mo1Pos1 = stepsPerRev*0.5;    // Position 1 in relation to Reference Point
 int mo1Pos2 = stepsPerRev*1.25;    // Position 2 in relation to Reference Point
 
+int mo2Speed = 400;             // Motor 2 Base Speed 
+int mo2MaxSpeedMult = 2;        // Motor 2 Max Speed Multiplier
+int mo2Accel = 20000;           // Motor 2 Acceleration
+int m02Direction = 1;           // Motor 2 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int mo2Pos1 = stepsPerRev*10;    // Position 1 in relation to Reference Point
+int mo2Pos2 = stepsPerRev*20;    // Position 2 in relation to Reference Point
+
 // initialize the stepper library on pins 12 through 9:
-AccelStepper stepper1(4, 12, 11, 10, 9);    // Definition of Stepper Motor (StepperType=4, PINA1 = 12, PINA2 = 11, PINA3 = 10, PINA4 = 9)
+AccelStepper stepper1(4, m01PinA1, m01PinA2, m01PinA3, m01PinA4);    // Definition of Stepper Motor (StepperType=4, PINA1 = 12, PINA2 = 11, PINA3 = 10, PINA4 = 9)
+AccelStepper stepper2(4, m02PinA1, m02PinA2, m02PinA3, m02PinA4);
 
 // SFC Variables
 int mode = 0;     // Current SFC Mode State
@@ -29,7 +48,7 @@ void setup() {
   // Initialize Inputs
   pinMode(button1, INPUT);
   pinMode(button2, INPUT);
-  pinMode(ledPin, OUTPUT);
+  //pinMode(ledPin, OUTPUT);
 }
 
 void loop() {
@@ -38,7 +57,10 @@ void loop() {
   {
     stepper1.setAcceleration(mo1Accel);
     stepper1.setMaxSpeed(m01Direction*mo1Speed*2);
-    stepper1.setSpeed(-m01Direction*mo1Speed);	
+    stepper1.setSpeed(-m01Direction*mo1Speed);
+    stepper2.setAcceleration(mo2Accel);
+    stepper2.setMaxSpeed(m02Direction*mo2Speed*2);
+    stepper2.setSpeed(-m02Direction*mo2Speed);		
     mode = 1; // Switch Mode
     Serial.println("Start Referencing");
   }
@@ -83,12 +105,15 @@ void loop() {
   // Mode Logic that has to be run each cycle
   if (mode == 1){                                             // 1 Referencing
     stepper1.runSpeed();  // refreshes Motor control
+    stepper2.runSpeed();
   }
   else if (mode == 2){                                        // 2 Move To Position 1 
     stepper1.runSpeed();  // refreshes Motor control
+    stepper2.runSpeed();
   }
   else if (mode == 3){                                        // 2 Move To Position 2
     stepper1.runSpeed();  // refreshes Motor control
+    stepper2.runSpeed();
   }
   
   
