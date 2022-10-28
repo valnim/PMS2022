@@ -28,8 +28,8 @@ int m01Direction = 1;           // Motor 1 Standard Direction Variable (1 - Cloc
 int mo1Pos1 = stepsPerRev*0.5;    // Position 1 in relation to Reference Point
 int mo1Pos2 = stepsPerRev*1.25;    // Position 2 in relation to Reference Point
 
-int mo2Speed = 400;             // Motor 2 Base Speed 
-int mo2MaxSpeedMult = 2;        // Motor 2 Max Speed Multiplier
+int mo2Speed = 50;             // Motor 2 Base Speed 
+int mo2MaxSpeedMult = 4;        // Motor 2 Max Speed Multiplier
 int mo2Accel = 20000;           // Motor 2 Acceleration
 int m02Direction = 1;           // Motor 2 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
 int mo2Pos1 = stepsPerRev*10;    // Position 1 in relation to Reference Point
@@ -41,6 +41,8 @@ AccelStepper stepper2(4, m02PinA1, m02PinA2, m02PinA3, m02PinA4);
 
 // SFC Variables
 int mode = 0;     // Current SFC Mode State
+
+HardwareSerial Serial1(PA10, PA9);
 
 void setup() { 
   // initialize the serial port:
@@ -104,15 +106,15 @@ void loop() {
  
   // Mode Logic that has to be run each cycle
   if (mode == 1){                                             // 1 Referencing
-    stepper1.runSpeed();  // refreshes Motor control
+    //stepper1.runSpeed();  // refreshes Motor control
     stepper2.runSpeed();
   }
   else if (mode == 2){                                        // 2 Move To Position 1 
-    stepper1.runSpeed();  // refreshes Motor control
+    //stepper1.runSpeed();  // refreshes Motor control
     stepper2.runSpeed();
   }
   else if (mode == 3){                                        // 2 Move To Position 2
-    stepper1.runSpeed();  // refreshes Motor control
+    //stepper1.runSpeed();  // refreshes Motor control
     stepper2.runSpeed();
   }
   
