@@ -20,3 +20,5 @@ Work with Git:
 3 Commit changes with description  
 4 Push commits to origin (Github.com)  
 5 Create merge request to Master
+
+Configure Arduino Studio for work with Nucleo: https://microcontrollerslab.com/stm32-nucleo-arduino-ide-tutorial/
