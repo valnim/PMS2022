@@ -122,7 +122,7 @@ void loop()
   // Mode Logic that has to be run each cycle
   if (mode == 1){
     barrierValue = analogRead(pResistor); // current light barrier sensor value
-  calibrate();                            // call of calibration algorithm
+    calibrate();                            // call of calibration algorithm
   }
   else if (mode == 2){    // Motor 1 for Transport System 1 and Divider is ON, Counter is counting goods
     barrierValue = analogRead(pResistor);   // current light barrier sensor value
