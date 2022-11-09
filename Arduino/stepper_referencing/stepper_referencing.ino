@@ -28,12 +28,12 @@ int m01Direction = 1;           // Motor 1 Standard Direction Variable (1 - Cloc
 int mo1Pos1 = stepsPerRev*0.5;    // Position 1 in relation to Reference Point
 int mo1Pos2 = stepsPerRev*1.25;    // Position 2 in relation to Reference Point
 
-int mo2Speed = 50;             // Motor 2 Base Speed 
-int mo2MaxSpeedMult = 4;        // Motor 2 Max Speed Multiplier
+int mo2Speed = 100;             // Motor 2 Base Speed 
+int mo2MaxSpeedMult = 2;        // Motor 2 Max Speed Multiplier
 int mo2Accel = 20000;           // Motor 2 Acceleration
 int m02Direction = 1;           // Motor 2 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int mo2Pos1 = stepsPerRev*10;    // Position 1 in relation to Reference Point
-int mo2Pos2 = stepsPerRev*20;    // Position 2 in relation to Reference Point
+int mo2Pos1 = stepsPerRev*0.5;    // Position 1 in relation to Reference Point
+int mo2Pos2 = stepsPerRev*1.25;    // Position 2 in relation to Reference Point
 
 // initialize the stepper library on pins 12 through 9:
 AccelStepper stepper1(4, m01PinA1, m01PinA2, m01PinA3, m01PinA4);    // Definition of Stepper Motor (StepperType=4, PINA1 = 12, PINA2 = 11, PINA3 = 10, PINA4 = 9)
@@ -106,15 +106,15 @@ void loop() {
  
   // Mode Logic that has to be run each cycle
   if (mode == 1){                                             // 1 Referencing
-    //stepper1.runSpeed();  // refreshes Motor control
+    stepper1.runSpeed();  // refreshes Motor control
     stepper2.runSpeed();
   }
   else if (mode == 2){                                        // 2 Move To Position 1 
-    //stepper1.runSpeed();  // refreshes Motor control
+    stepper1.runSpeed();  // refreshes Motor control
     stepper2.runSpeed();
   }
   else if (mode == 3){                                        // 2 Move To Position 2
-    //stepper1.runSpeed();  // refreshes Motor control
+    stepper1.runSpeed();  // refreshes Motor control
     stepper2.runSpeed();
   }
   
