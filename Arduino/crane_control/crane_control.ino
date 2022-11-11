@@ -26,9 +26,9 @@ const int stepsPerRev = 200;  // change this to fit the number of steps per revo
 // Motor variables
 // Lift Motor
 int liftSpeed = 400;             // Motor 1 Base Speed 
-int liftMaxSpeedMult = 8;        // Motor 1 Max Speed Multiplier
+int liftMaxSpeedMult = 2;        // Motor 1 Max Speed Multiplier
 int liftAccel = 20000;           // Motor 1 Acceleration
-int liftDir = 1;           // Motor 1 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int liftDir = -1;           // Motor 1 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
 int liftInitDistance = 2*stepsPerRev;      // Initialization Distance
 
 // Rotation Motor
@@ -39,9 +39,9 @@ int rotDir = 1;           // Motor 2 Standard Direction Variable (1 - Clockwise,
 int rotInitDistance = 100;      // Initialization Distance
 
 // Motor Positions
-const int Pos1 = stepsPerRev*0.5;    // Position 1 for Motor 2 in Phi-Axis
-const int Pos2 = stepsPerRev*10.5;    // Position 2 for Motor 1 in Z-Axis
-const int Pos3 = stepsPerRev*1.5;    // Position 3 for Motor 2 in Phi-Axis
+const int Pos1 = stepsPerRev*0.1;    // Position 1 for Motor 2 in Phi-Axis
+const int Pos2 = stepsPerRev*15;    // Position 2 for Motor 1 in Z-Axis
+const int Pos3 = stepsPerRev*0.4;    // Position 3 for Motor 2 in Phi-Axis
 const int Pos4 = stepsPerRev*0.1;    // Position 4 for Motor 1 in Z-Axis
 
 // initialize the stepper library on pins 12 through 9:
@@ -87,6 +87,7 @@ void loop() {
     stepperLift.setSpeed(-liftDir*liftSpeed);
     
     Serial.println(stepperLift.speed());
+    
 
     mode = 1; // Switch Mode
     Serial.println("Start Referencing Z-Axis");
@@ -167,7 +168,7 @@ void loop() {
     stepperLift.setSpeed(-liftDir*liftSpeed);	
     mode = 6;   // Switch Mode
   }
-  else if (abs(stepperLift.currentPosition()) >= Pos4 && mode == 6)         // 6-7 Requirement: Lift Motor Position 4 reached
+  else if (abs(stepperLift.currentPosition()) <= Pos4 && mode == 6)         // 6-7 Requirement: Lift Motor Position 4 reached
   {
     stepperLift.stop();  // Stop Lift Motor at Pos 4
     stepperLift.setSpeed(0);
