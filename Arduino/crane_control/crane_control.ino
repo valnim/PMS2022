@@ -3,24 +3,24 @@
 const int stepsPerRev = 200;  // change this to fit the number of steps per revolution for your motor
 
 // Input Pins
-const int button1 = 2;  // Start Pin
-const int button2 = 13;  // Reference Button Pin
+#define button1 2  // Start Pin
+#define button2 13  // Reference Button Pin
 
 // Output Pins
-//const int ledPin =  13; // Indicatior LED Pin
+//#define ledPin 13 // Indicatior LED Pin
 
 // Motor Pins
 // Lift Motor
-const int m01PinA1 = 12;
-const int m01PinA2 = 11;
-const int m01PinA3 = 10;
-const int m01PinA4 = 9;
+#define m01PinA1 12
+#define m01PinA2 11
+#define m01PinA3 10
+#define m01PinA4 9
 
 //Rotation Motor
-const int m02PinA1 = 7;
-const int m02PinA2 = 6;
-const int m02PinA3 = 5;
-const int m02PinA4 = 3;
+#define m02PinA1 7
+#define m02PinA2 6
+#define m02PinA3 5
+#define m02PinA4 3
 
 // Motor variables
 // Lift Motor
