@@ -2,20 +2,20 @@
 
 // Motor control digital output pins defined as global constants
   // Pins on Channel 1 of L293D
-  const int mo1_controlPin1A = 2;                
-  const int mo1_controlPin2A = 5;                 
-  const int mo1_enablePin = 9;      
+  #define mo1_controlPin1A 2             
+  #define mo1_controlPin2A 5                
+  #define mo1_enablePin 9     
   Elego_Motor mo1(mo1_controlPin1A, mo1_controlPin2A, mo1_enablePin);
 
   // Pins on Channel 2 of L293D Currently not used!
-  //const int mo2_controlPin1A = 8;                
-  //const int mo2_controlPin2A = 10;                 
-  //const int mo2_enablePin = 11;      
+  //#define mo2_controlPin1A 8              
+  //#define mo2_controlPin2A 10                
+  //#define mo2_enablePin 11      
   //Elego_Motor mo2(mo2_controlPin1A, mo2_controlPin2A, mo2_enablePin);
 
 // Input pins 
-  const int bstart_Pin = 4;         // Button Start Pin
-  const int pResistor = A0;         // Photoresistor at Arduino analog pin A0
+  #define bstart_Pin = 4         // Button Start Pin
+  #define pResistor = A0         // Photoresistor at Arduino analog pin A0
 
 // Motor control global variables: 
   //Motor 1 (Transportsystem 1 both motors)
