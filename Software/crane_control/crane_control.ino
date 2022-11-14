@@ -83,7 +83,6 @@ void loop() {
     Serial.println("Initializing Z-Axis");
     // Move upwards in Z-Direction to unpress limit switch
     stepperLift.setSpeed(liftDir*liftSpeed/2);
-    Serial.println(stepperLift.speed());
     mode = 1;   // Switch Mode
     Serial.println(mode);
   }
@@ -94,7 +93,6 @@ void loop() {
     Serial.println("Initializing Phi-Axis");
     // Move Clockwise to unpress limit switch
     stepperRot.setSpeed(rotDir*rotSpeed/2);    
-    Serial.println(stepperRot.speed());
     mode = 2;   // Switch Mode
     Serial.println(mode);
   }
@@ -104,7 +102,6 @@ void loop() {
     stepperRot.setSpeed(0);
     // Set Motor Direction for Referencing   
     stepperRot.setSpeed(-rotDir*rotSpeed);
-    Serial.println(stepperRot.speed());
     mode = 3; // Switch Mode
     Serial.println(mode);
     Serial.println("Start Referencing Phi-Axis");
@@ -118,7 +115,6 @@ void loop() {
 
     // Set Motor Direction for Referencing    
     stepperLift.setSpeed(-liftDir*liftSpeed);
-    Serial.println(stepperLift.speed());
     mode = 4; // Switch Mode
     Serial.println(mode);
     Serial.println("Start Referencing Z-Axis");
