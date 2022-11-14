@@ -28,20 +28,20 @@ const int stepsPerRev = 200;  // change this to fit the number of steps per revo
 int liftSpeed = 350;             // Motor 1 Base Speed 
 int liftMaxSpeedMult = 2;        // Motor 1 Max Speed Multiplier
 int liftAccel = 20000;           // Motor 1 Acceleration
-int liftDir = 1;           // Motor 1 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int liftInitDistance = 10*stepsPerRev;      // Initialization Distance
+int liftDir = -1;           // Motor 1 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int liftInitDistance = 2*stepsPerRev;      // Initialization Distance
 
 // Rotation Motor
 int rotSpeed = 300;             // Motor 2 Base Speed 
 int rotMaxSpeedMult = 2;        // Motor 2 Max Speed Multiplier
 int rotAccel = 20000;           // Motor 2 Acceleration
 int rotDir = 1;           // Motor 2 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int rotInitDistance = 10*stepsPerRev;      // Initialization Distance
+int rotInitDistance = 2*stepsPerRev;      // Initialization Distance
 
 // Motor Positions
-const int Pos1 = stepsPerRev*0.1;    // Position 1 for Motor 2 in Phi-Axis
+const int Pos1 = stepsPerRev*1;    // Position 1 for Motor 2 in Phi-Axis
 const int Pos2 = stepsPerRev*15;    // Position 2 for Motor 1 in Z-Axis
-const int Pos3 = stepsPerRev*0.4;    // Position 3 for Motor 2 in Phi-Axis
+const int Pos3 = stepsPerRev*6;    // Position 3 for Motor 2 in Phi-Axis
 const int Pos4 = stepsPerRev*10;    // Position 4 for Motor 1 in Z-Axis
 
 // initialize the stepper library on pins 12 through 9:
@@ -83,6 +83,7 @@ void loop() {
     Serial.println("Initializing Z-Axis");
     // Move upwards in Z-Direction to unpress limit switch
     stepperLift.setSpeed(liftDir*liftSpeed/2);
+    Serial.println(stepperLift.speed());
     mode = 1;   // Switch Mode
     Serial.println(mode);
   }
@@ -93,6 +94,7 @@ void loop() {
     Serial.println("Initializing Phi-Axis");
     // Move Clockwise to unpress limit switch
     stepperRot.setSpeed(rotDir*rotSpeed/2);    
+    Serial.println(stepperRot.speed());
     mode = 2;   // Switch Mode
     Serial.println(mode);
   }
@@ -102,6 +104,7 @@ void loop() {
     stepperRot.setSpeed(0);
     // Set Motor Direction for Referencing   
     stepperRot.setSpeed(-rotDir*rotSpeed);
+    Serial.println(stepperRot.speed());
     mode = 3; // Switch Mode
     Serial.println(mode);
     Serial.println("Start Referencing Phi-Axis");
@@ -115,6 +118,7 @@ void loop() {
 
     // Set Motor Direction for Referencing    
     stepperLift.setSpeed(-liftDir*liftSpeed);
+    Serial.println(stepperLift.speed());
     mode = 4; // Switch Mode
     Serial.println(mode);
     Serial.println("Start Referencing Z-Axis");
