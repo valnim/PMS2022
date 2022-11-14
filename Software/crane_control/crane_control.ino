@@ -35,8 +35,8 @@ int liftInitDistance = 2*stepsPerRev;      // Initialization Distance
 int rotSpeed = 300;             // Motor 2 Base Speed 
 int rotMaxSpeedMult = 2;        // Motor 2 Max Speed Multiplier
 int rotAccel = 20000;           // Motor 2 Acceleration
-int rotDir = 1;           // Motor 2 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int rotInitDistance = 2*stepsPerRev;      // Initialization Distance
+int rotDir = -1;           // Motor 2 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int rotInitDistance = 1*stepsPerRev;      // Initialization Distance
 
 // Motor Positions
 const int Pos1 = stepsPerRev*1;    // Position 1 for Motor 2 in Phi-Axis
