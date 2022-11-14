@@ -25,24 +25,24 @@ const int stepsPerRev = 200;  // change this to fit the number of steps per revo
 
 // Motor variables
 // Lift Motor
-int liftSpeed = 400;             // Motor 1 Base Speed 
+int liftSpeed = 350;             // Motor 1 Base Speed 
 int liftMaxSpeedMult = 2;        // Motor 1 Max Speed Multiplier
 int liftAccel = 20000;           // Motor 1 Acceleration
-int liftDir = -1;           // Motor 1 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int liftInitDistance = 2*stepsPerRev;      // Initialization Distance
+int liftDir = 1;           // Motor 1 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int liftInitDistance = 10*stepsPerRev;      // Initialization Distance
 
 // Rotation Motor
-int rotSpeed = 50;             // Motor 2 Base Speed 
+int rotSpeed = 300;             // Motor 2 Base Speed 
 int rotMaxSpeedMult = 2;        // Motor 2 Max Speed Multiplier
 int rotAccel = 20000;           // Motor 2 Acceleration
 int rotDir = 1;           // Motor 2 Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int rotInitDistance = 100;      // Initialization Distance
+int rotInitDistance = 10*stepsPerRev;      // Initialization Distance
 
 // Motor Positions
 const int Pos1 = stepsPerRev*0.1;    // Position 1 for Motor 2 in Phi-Axis
 const int Pos2 = stepsPerRev*15;    // Position 2 for Motor 1 in Z-Axis
 const int Pos3 = stepsPerRev*0.4;    // Position 3 for Motor 2 in Phi-Axis
-const int Pos4 = stepsPerRev*0.1;    // Position 4 for Motor 1 in Z-Axis
+const int Pos4 = stepsPerRev*10;    // Position 4 for Motor 1 in Z-Axis
 
 // initialize the stepper library on pins 12 through 9:
 AccelStepper stepperLift(4, m01PinA1, m01PinA2, m01PinA3, m01PinA4);    // Definition of Stepper Motor (StepperType=4, PINA1 = 12, PINA2 = 11, PINA3 = 10, PINA4 = 9)
@@ -67,84 +67,86 @@ void setup() {
   stepperLift.setMaxSpeed(liftSpeed*liftMaxSpeedMult);
   stepperLift.stop();
   stepperLift.setSpeed(0);
+  stepperLift.setCurrentPosition(0);
   // Set up Stepper 2 Accelleration and Max Speed
   stepperRot.setAcceleration(rotAccel);
   stepperRot.setMaxSpeed(rotSpeed*rotMaxSpeedMult);
   stepperRot.stop();
   stepperRot.setSpeed(0);
+  stepperRot.setCurrentPosition(0);
 }
 
 void loop() {
   // Mode Switch Logic and Mode Logic that has to happen once
-  if (digitalRead(button1) == HIGH && mode == 0)                      //0-1 Requirement: Button Start
+  if (digitalRead(button1) == HIGH && mode == 0)                                  //0-1 Requirement: Button Start
   {
     Serial.println("Initializing Z-Axis");
     // Move upwards in Z-Direction to unpress limit switch
-    //stepperLift.setSpeed(liftDir*liftSpeed);
-    //stepperLift.move(-liftInitDistance*liftDir);
-    //stepperLift.runToPosition();
-    // Set Motor Direction for Referencing    
-    stepperLift.setSpeed(-liftDir*liftSpeed);
-    
-    Serial.println(stepperLift.speed());
-    
-
-    mode = 1; // Switch Mode
-    Serial.println("Start Referencing Z-Axis");
+    stepperLift.setSpeed(liftDir*liftSpeed/2);
+    mode = 1;   // Switch Mode
+    Serial.println(mode);
   }
-  else if (digitalRead(limit1) && mode == 1)                            //1-2 Limit Switch 1 in Z-Axis reached
+  else if (abs(stepperLift.currentPosition()) >= liftInitDistance && mode == 1)   // 1-2  Requirement: Lift Motor Initialization Position reached
   {
-    // Stopp Motor 1 at Reference Position
-    stepperLift.stop();
+    stepperLift.stop();  // Stop Lift Motor at Pos 2
     stepperLift.setSpeed(0);
-    //Serial.println(stepperLift.currentPosition());     // Log Position
-    stepperLift.setCurrentPosition(0);                   // Set Current Position to Zero
-    //Serial.println(stepperLift.currentPosition());     // Log Position
-    delay(1000);                                      // Wait at Reference Position
-
     Serial.println("Initializing Phi-Axis");
     // Move Clockwise to unpress limit switch
-    //stepperRot.setSpeed(rotDir*rotSpeed);	
-    //stepperRot.move(-rotInitDistance*rotDir);
-    //stepperRot.runToPosition();
-    // Set Motor Direction for Referencing    
+    stepperRot.setSpeed(rotDir*rotSpeed/2);    
+    mode = 2;   // Switch Mode
+    Serial.println(mode);
+  }
+  else if (abs(stepperRot.currentPosition()) >= rotInitDistance && mode == 2)      //2-3 Requirement: Rotation Motor Initialization Position reached
+  {
+    stepperRot.stop();
+    stepperRot.setSpeed(0);
+    // Set Motor Direction for Referencing   
     stepperRot.setSpeed(-rotDir*rotSpeed);
-
-    mode = 2; // Switch Mode
+    mode = 3; // Switch Mode
+    Serial.println(mode);
     Serial.println("Start Referencing Phi-Axis");
   }
-  else if (digitalRead(limit2) && mode == 2)        // 2-3 Limit Switch 1 in Phi-Axis reached
+  else if (digitalRead(limit2) && (mode == 3 || mode == 9))                         //3-4 OR 9-3 Limit Switch 2 in Phi-Axis reached
   {
     // Stopp Motor 2 at Reference Position
     stepperRot.stop();
     stepperRot.setSpeed(0);
-    //Serial.println(stepperRot.currentPosition());     // Log Position
     stepperRot.setCurrentPosition(0);                   // Set Current Position to Zero
-    //Serial.println(stepperRot.currentPosition());     // Log Position
+
+    // Set Motor Direction for Referencing    
+    stepperLift.setSpeed(-liftDir*liftSpeed);
+    mode = 4; // Switch Mode
+    Serial.println(mode);
+    Serial.println("Start Referencing Z-Axis");
+  }
+  else if (digitalRead(limit1) && mode == 4)        // 4-5 Limit Switch 1 in Z-Axis reached
+  {
+    // Stopp Motor 1 at Reference Position
+    stepperLift.stop();
+    stepperLift.setSpeed(0);
+    stepperLift.setCurrentPosition(0);                   // Set Current Position to Zero
     delay(1000);                                      // Wait at Reference Position
     Serial.println("Referencing Complete");
 
     // Move Roation Motor 2 to Pos 1
     stepperRot.setSpeed(rotDir*rotSpeed);	
-    mode = 3; // Switch Mode
+    mode = 5; // Switch Mode
+    Serial.println(mode);
   }
-  else if ((abs(stepperRot.currentPosition()) >= Pos1 && mode == 3) || (abs(stepperRot.currentPosition()) <= Pos1 && mode == 7))         // 3-4 OR 7-4 Requirement: Rotation Motor Position 1 reached
+  else if ((abs(stepperRot.currentPosition()) >= Pos1 && mode == 5) )         // 5-6 Requirement: Rotation Motor Position 1 reached
   {
     stepperRot.stop();  // Stop Rotation Motor at Pos 1
     stepperRot.setSpeed(0);
     Serial.println("Pos 1 reached");
     Serial.println(abs(stepperRot.currentPosition()));  // Log Current Position
-    delay(500); // Wait at Position 2
+    delay(500); // Wait at Position 1
 
     // Move Lift Motor to Pos 2
-
     stepperLift.setSpeed(liftDir*liftSpeed);	
-
-    Serial.println(stepperLift.speed());
-
-    mode = 4;   // Switch Mode
+    mode = 6;   // Switch Mode
+    Serial.println(mode);
   }
-  else if (abs(stepperLift.currentPosition()) >= Pos2 && mode == 4)         // 4-5 Requirement: Lift Motor 1 Position 2 reached
+  else if (abs(stepperLift.currentPosition()) >= Pos2 && mode == 6)         // 6-7 Requirement: Lift Motor 1 Position 2 reached
   {
     stepperLift.stop();  // Stop Lift Motor at Pos 2
     stepperLift.setSpeed(0);
@@ -154,9 +156,10 @@ void loop() {
 
     // Move Rotation Motor to Pos 3
     stepperRot.setSpeed(rotDir*rotSpeed);	
-    mode = 5;   // Switch Mode
+    mode = 7;   // Switch Mode
+    Serial.println(mode);
   }
-  else if (abs(stepperRot.currentPosition()) >= Pos3 && mode == 5)         // 5-6 Requirement: Rotation Motor Position 3 reached
+  else if (abs(stepperRot.currentPosition()) >= Pos3 && mode == 7)         // 7-8 Requirement: Rotation Motor Position 3 reached
   {
     stepperRot.stop();  // Stop Roation Motor at Pos 3
     stepperRot.setSpeed(0);
@@ -166,9 +169,10 @@ void loop() {
 
     // Move Lift Motor to Pos 4
     stepperLift.setSpeed(-liftDir*liftSpeed);	
-    mode = 6;   // Switch Mode
+    mode = 8;   // Switch Mode
+    Serial.println(mode);
   }
-  else if (abs(stepperLift.currentPosition()) <= Pos4 && mode == 6)         // 6-7 Requirement: Lift Motor Position 4 reached
+  else if (abs(stepperLift.currentPosition()) <= Pos4 && mode == 8)         // 8-9 Requirement: Lift Motor Position 4 reached
   {
     stepperLift.stop();  // Stop Lift Motor at Pos 4
     stepperLift.setSpeed(0);
@@ -176,45 +180,14 @@ void loop() {
     Serial.println(abs(stepperLift.currentPosition()));  // Log Current Position
     delay(500); // Wait at Position 4
 
-    // Move Rotation Motor to Pos 1
+    // Move Rotation Motor to Reference Position Phi
     stepperRot.setSpeed(-1*rotDir*rotSpeed);	
-    mode = 7;   // Switch Mode
+    mode = 9;   // Switch Mode
+    Serial.println(mode);
   }
  
-  if (mode == 0){
-    stepperLift.runSpeed();
-    stepperRot.runSpeed();
-  }
-  // Mode Logic that has to be run each cycle
-  else if (mode == 1){// 1 Referencing Z-Axis
-    stepperLift.runSpeed();  // refreshes Motor control
-    stepperRot.runSpeed();
-  }
-  else if (mode == 2){                                        // 2 Referncing Phi-Axis
-    stepperLift.runSpeed();  // refreshes Motor control
-    stepperRot.runSpeed();
-  }
-  else if (mode == 3){                                        // 2 Move To Position 2
-    stepperLift.runSpeed();  // refreshes Motor control
-    stepperRot.runSpeed();
-  }
-  else if (mode == 4){                                        // 2 Referncing Phi-Axis
-    stepperLift.runSpeed();  // refreshes Motor control
-    stepperRot.runSpeed();
-  }
-  else if (mode == 5){                                        // 2 Move To Position 2
-    stepperLift.runSpeed();  // refreshes Motor control
-    stepperRot.runSpeed();
-  }
-  else if (mode == 6){                                        // 2 Referncing Phi-Axis
-    stepperLift.runSpeed();  // refreshes Motor control
-    stepperRot.runSpeed();
-  }
-  else if (mode == 7){                                        // 2 Move To Position 2
-    stepperLift.runSpeed();  // refreshes Motor control
-    stepperRot.runSpeed();
-  }
-  
+  stepperLift.runSpeed();  // refreshes Motor control
+  stepperRot.runSpeed();
   
 }
 
