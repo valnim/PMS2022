@@ -28,7 +28,7 @@
 #define stepsPerRevolutionA 200
 
 // Motor variables
-int moXSpeed = 8000;            // Motor X Base Speed 
+int moXSpeed = 2000;            // Motor X Base Speed 
 int moXMaxSpeedMult = 1;        // Motor X Max Speed Multiplier
 int moXAccel = 20000;           // Motor X Acceleration
 int moXDirection = -1;          // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
@@ -47,9 +47,10 @@ int mode = 0;     // Current SFC Mode State
 
 void setup() 
 { 
-  // initialize the serial port:
+  // initialize the serial port
   Serial.begin(9600);
   stepperX.setEnablePin(stepperEnable);
+  stepperY.setEnablePin(stepperEnable);
   
   // Initialize Inputs
   pinMode(limitX, INPUT);
@@ -59,11 +60,15 @@ void setup()
   //Initialize Outputs  
   
   pinMode(stepperEnable, OUTPUT);
-  digitalWrite(stepperEnable, HIGH);
+  //digitalWrite(stepperEnable, HIGH);
   
   stepperX.setAcceleration(moXAccel);
   stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
   stepperX.setSpeed(moXDirection*moXSpeed);
+
+  stepperY.setAcceleration(moXAccel);
+  stepperY.setMaxSpeed(moXDirection*moXSpeed*2);
+  stepperY.setSpeed(moXDirection*moXSpeed);
 }
 
 void loop() {
@@ -72,18 +77,20 @@ void loop() {
   {
     //digitalWrite(stepperEnable, HIGH);
     stepperX.enableOutputs();
+    stepperY.disableOutputs();
     Serial.println();
     mode = mode+1; // Switch Mode
   }
   else if (digitalRead(limitY) && mode == 1)                              //1-2 Reference Sensor Reached
   {
     stepperX.disableOutputs();
-    
+    stepperY.enableOutputs();
     mode = 0 ; // Switch Mode
     //digitalWrite(stepperEnable, LOW);
   }
   
   Serial.println(mode);
   stepperX.runSpeed();
+  stepperY.runSpeed();
 }
 
