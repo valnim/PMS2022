@@ -50,7 +50,7 @@ void setup()
   // initialize the serial port
   Serial.begin(9600);
   stepperX.setEnablePin(stepperEnable);
-  stepperY.setEnablePin(stepperEnable);
+  
   
   // Initialize Inputs
   pinMode(limitX, INPUT);
@@ -64,13 +64,13 @@ void setup()
   
   stepperX.setAcceleration(moXAccel);
   stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
-  stepperX.setSpeed(moXDirection*moXSpeed);
+  stepperX.setSpeed(0);
 
   stepperY.setAcceleration(moXAccel);
   stepperY.setMaxSpeed(moXDirection*moXSpeed*2);
-  stepperY.setSpeed(-moXDirection*moXSpeed);
+  stepperY.setSpeed(0);
 
-  stepperX.enableOutputs();
+  stepperX.disableOutputs();
   
 }
 
@@ -78,9 +78,10 @@ void loop() {
   // Mode Switch Logic and Mode Logic that has to happen once
   if (digitalRead(limitX) == HIGH && mode == 0)                      //0-1 Requirement: Button Start
   {
-    
+    stepperX.disableOutputs();
+
     stepperX.setSpeed(moXDirection*moXSpeed);
-    stepperY.setSpeed(-moXDirection*moXSpeed);
+    //stepperY.setSpeed(-moXDirection*moXSpeed);
 
     Serial.println();
     mode = mode+1; // Switch Mode
@@ -88,17 +89,21 @@ void loop() {
   else if (digitalRead(limitY) && mode == 1)                              //1-2 Reference Sensor Reached
   {
     stepperX.stop();
-    stepperY.stop();
-
+    
     stepperX.setSpeed(0);
-    stepperY.setSpeed(0);
+  
+    stepperX.enableOutputs();
+    
 
     mode = 0 ; // Switch Mode
     //digitalWrite(stepperEnable, LOW);
   }
   
   Serial.println(mode);
-  stepperX.runSpeed();
-  stepperY.runSpeed();
+  if (mode == 1){
+    stepperX.runSpeed();
+    stepperY.runSpeed();
+  }
+  
 }
 
