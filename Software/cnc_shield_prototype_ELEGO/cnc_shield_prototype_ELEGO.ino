@@ -38,7 +38,7 @@ int moXDirection = -1;          // Motor X Standard Direction Variable (1 - Cloc
 
 //initialize the stepper motors as existing objects
 AccelStepper stepperX(1, stepPinX, dirPinX);      //Stepper Type = 1, as used with DRV8825
-AccelStepper stepperY(1, stepPinY, dirPinY);
+//AccelStepper stepperY(1, stepPinY, dirPinY);
 AccelStepper stepperZ(1, stepPinZ, dirPinZ);
 AccelStepper stepperA(1, stepPinA, dirPinA);
 
@@ -66,9 +66,9 @@ void setup()
   stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
   stepperX.setSpeed(0);
 
-  stepperY.setAcceleration(moXAccel);
-  stepperY.setMaxSpeed(moXDirection*moXSpeed*2);
-  stepperY.setSpeed(0);
+  //stepperY.setAcceleration(moXAccel);
+  //stepperY.setMaxSpeed(moXDirection*moXSpeed*2);
+  //stepperY.setSpeed(0);
 
   stepperX.disableOutputs();
   
@@ -81,28 +81,36 @@ void loop() {
     stepperX.disableOutputs();
 
     stepperX.setSpeed(moXDirection*moXSpeed);
-    //stepperY.setSpeed(-moXDirection*moXSpeed);
 
     Serial.println();
     mode = mode+1; // Switch Mode
+
+    digitalWrite(stepPinY,HIGH);
+    delay(10);
+    digitalWrite(stepPinY,LOW);
   }
   else if (digitalRead(limitY) && mode == 1)                              //1-2 Reference Sensor Reached
   {
-    stepperX.stop();
     
-    stepperX.setSpeed(0);
-  
-    stepperX.enableOutputs();
-    
+    digitalWrite(stepPinY,HIGH);
+    delay(10);
+    digitalWrite(stepPinY,LOW);
+    delay(10);
+    digitalWrite(stepPinY,HIGH);
+    delay(10);
+    digitalWrite(stepPinY,LOW);
+    delay(50);
+    digitalWrite(stepPinY,HIGH);
+    delay(10);
+    digitalWrite(stepPinY,LOW);
 
     mode = 0 ; // Switch Mode
-    //digitalWrite(stepperEnable, LOW);
+    
   }
   
   Serial.println(mode);
   if (mode == 1){
     stepperX.runSpeed();
-    stepperY.runSpeed();
   }
   
 }
