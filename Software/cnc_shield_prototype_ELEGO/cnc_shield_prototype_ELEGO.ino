@@ -68,23 +68,31 @@ void setup()
 
   stepperY.setAcceleration(moXAccel);
   stepperY.setMaxSpeed(moXDirection*moXSpeed*2);
-  stepperY.setSpeed(moXDirection*moXSpeed);
+  stepperY.setSpeed(-moXDirection*moXSpeed);
+
+  stepperX.enableOutputs();
+  
 }
 
 void loop() {
   // Mode Switch Logic and Mode Logic that has to happen once
   if (digitalRead(limitX) == HIGH && mode == 0)                      //0-1 Requirement: Button Start
   {
-    //digitalWrite(stepperEnable, HIGH);
-    stepperX.enableOutputs();
-    stepperY.disableOutputs();
+    
+    stepperX.setSpeed(moXDirection*moXSpeed);
+    stepperY.setSpeed(-moXDirection*moXSpeed);
+
     Serial.println();
     mode = mode+1; // Switch Mode
   }
   else if (digitalRead(limitY) && mode == 1)                              //1-2 Reference Sensor Reached
   {
-    stepperX.disableOutputs();
-    stepperY.enableOutputs();
+    stepperX.stop();
+    stepperY.stop();
+
+    stepperX.setSpeed(0);
+    stepperY.setSpeed(0);
+
     mode = 0 ; // Switch Mode
     //digitalWrite(stepperEnable, LOW);
   }
