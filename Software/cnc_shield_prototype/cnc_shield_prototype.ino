@@ -28,7 +28,7 @@
 #define stepsPerRevolutionA 200
 
 // Motor variables
-int moXSpeed = 8000;            // Motor X Base Speed 
+int moXSpeed = 2000;            // Motor X Base Speed 
 int moXMaxSpeedMult = 1;        // Motor X Max Speed Multiplier
 int moXAccel = 20000;           // Motor X Acceleration
 int moXDirection = -1;          // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
@@ -38,8 +38,8 @@ int moXDirection = -1;          // Motor X Standard Direction Variable (1 - Cloc
 
 //initialize the stepper motors as existing objects
 AccelStepper stepperX(1, stepPinX, dirPinX);      //Stepper Type = 1, as used with DRV8825
-AccelStepper stepperY(1, stepPinY, dirPinY);
-AccelStepper stepperZ(1, stepPinZ, dirPinZ);
+AccelStepper stepperZ(1, stepPinY, dirPinY);
+AccelStepper stepperY(1, stepPinZ, dirPinZ);
 AccelStepper stepperA(1, stepPinA, dirPinA);
 
 // SFC Variables
@@ -47,9 +47,10 @@ int mode = 0;     // Current SFC Mode State
 
 void setup() 
 { 
-  // initialize the serial port:
+  // initialize the serial port
   Serial.begin(9600);
   stepperX.setEnablePin(stepperEnable);
+  
   
   // Initialize Inputs
   pinMode(limitX, INPUT);
@@ -59,31 +60,53 @@ void setup()
   //Initialize Outputs  
   
   pinMode(stepperEnable, OUTPUT);
-  digitalWrite(stepperEnable, HIGH);
+  //digitalWrite(stepperEnable, HIGH);
   
   stepperX.setAcceleration(moXAccel);
   stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
-  stepperX.setSpeed(moXDirection*moXSpeed);
+  stepperX.setSpeed(0);
+
+  stepperY.setAcceleration(moXAccel);
+  stepperY.setMaxSpeed(moXDirection*moXSpeed*2);
+  stepperY.setSpeed(0);
+
+  stepperX.disableOutputs();
+  
 }
 
 void loop() {
   // Mode Switch Logic and Mode Logic that has to happen once
   if (digitalRead(limitX) == HIGH && mode == 0)                      //0-1 Requirement: Button Start
   {
-    //digitalWrite(stepperEnable, HIGH);
-    stepperX.enableOutputs();
+    stepperX.disableOutputs();
+
+    stepperX.setSpeed(moXDirection*moXSpeed);
+    stepperY.setSpeed(-moXDirection*moXSpeed);
+
     Serial.println();
     mode = mode+1; // Switch Mode
   }
   else if (digitalRead(limitY) && mode == 1)                              //1-2 Reference Sensor Reached
   {
-    stepperX.disableOutputs();
+    stepperX.stop();
+    stepperY.stop();
+
+    stepperX.setSpeed(0);
+    stepperY.setSpeed(0);
+
+    stepperX.enableOutputs();
     
+
     mode = 0 ; // Switch Mode
     //digitalWrite(stepperEnable, LOW);
   }
   
   Serial.println(mode);
-  stepperX.runSpeed();
+  if (mode == 1){
+    stepperX.runSpeed();
+    stepperY.runSpeed();
+  }
+  
 }
+
 
