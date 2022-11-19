@@ -1,5 +1,7 @@
 #include <AccelStepper.h>
 #include <LiquidCrystal.h>
+#include <Button.h>
+
 // Buttons
 #define button1 temp  //Button Start / System is Safe to Start
 #define button2 temp  //Button Pause
@@ -13,9 +15,6 @@
 //Define LCD pins
 const int rs = 4, en = 3, d4 = 5, d5 = 6, d6 = 7, d7 = 8; //ÜBERARBEITEN!!!!
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
-
-//Definie Interface-Buttons
-const byte START = 1, STOP = 2, PAUSE = 3;                //ÜBERARBEITEN!!!
 
 // Counter System Components
 #define photoRes A0       // Photo Resistor Pin
@@ -76,6 +75,11 @@ AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
 AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
 AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Elego Motor --> move to seperate Library
 
+//intialize the Buttons as ojects
+Button bStart(button1)  // Button Start
+Button bPause(button2)  // Button Pause
+Button bStop(button3)   // Button Stop
+
 // General Variables
 int mode = 0;                     // Current SFC Mode State
 
@@ -85,11 +89,6 @@ int count_max = 20;               // Max goods count in Transport Box
 int count_State = 0;              // Button Count Default State
 int count_lastState = 0;          // Button Count Last State
 int amount_Box = 0;               // Counter Variable for filled Boxes
-
-//Button States
-int bSTART_State = 0;             // Button Start Default State
-int bPause_State = 0;             // Button Start Default State
-int bSTOP_State = 1;              // Button Start Default State
 
 bool calibrated = false;          // Light barrier calibration status
 int threshold = 0;                // Light barrier threshold
@@ -112,15 +111,12 @@ void setup()
   pinMode(limitX, INPUT);
   pinMode(limitY, INPUT);
   pinMode(limitZ, INPUT);
-  pinMode(button1, INPUT);
-  pinMode(button2, INPUT);
-  pinMode(button3, INPUT);
   pinMode(photoRes, INPUT);
   
-  //Initialize Buttons as Input
-  pinMode(START, INPUT);
-  pinMode(STOP, INPUT);
-  pinMode(PAUSE, INPUT);
+  // Initialize Buttons
+  bStart.begin();
+  bPause.begin();
+  bStop.begin();
  
   //Initialize Outputs  
   pinMode(ledGreen, OUTPUT);
@@ -143,7 +139,6 @@ void setup()
 }
 
 
-
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
 {
   Serial.println(barrierValue);
@@ -159,10 +154,12 @@ void calibrate_photoresistor()    // Before each counting cycle the light barrie
   delay(100);
 }
 
+
 void reference_crane()
 {
   //write down code for reference of crane here
 }
+
 
 void ts1_on()   // Starts Transport System 1
 {
@@ -172,10 +169,12 @@ void ts1_on()   // Starts Transport System 1
   mo1.setSpeed(mo1_mS);
 }
 
+
 void Crane_moving()
 {
   //write down code for transporting away the box here
 }
+
 
 void counter()      // If the barrier sensor value falls below the threshold an item is counted.
 {   
@@ -198,13 +197,11 @@ void counter()      // If the barrier sensor value falls below the threshold an 
   count_lastState = count_State;
 }
 
+
 void loop()         //ÜBERARBEITEN bzw. zusammenführen
 {  
-  // read the state of the pushbutton value:
-  bSTART_State = digitalRead(START);
-
-  // Mode Switch Logic and Mode Logic that has to happen once
-  if (bSTART_State == HIGH && mode == 0)                      //0-1 Requirement: Button Start
+    // Mode Switch Logic and Mode Logic that has to happen once
+  if (bStart.pressed() && mode == 0)                      //0-1 Requirement: Button Start
   {
     mode = 1;
     Serial.println("Begin Light Barrier Calibration:");
