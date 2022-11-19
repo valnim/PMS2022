@@ -1,6 +1,14 @@
-//Include libraries
-#include <LiquidCrystal.h>
 #include <AccelStepper.h>
+#include <LiquidCrystal.h>
+// Buttons
+#define button1 temp  //Button Start / System is Safe to Start
+#define button2 temp  //Button Pause
+#define button3 temp  //Button Emergency Stop
+
+// Indicator Leds
+#define ledGreen 5 // Check!
+#define ledYellow 6 // Check!
+#define ledRed 7 // Check!
 
 //Define LCD pins
 const int rs = 4, en = 3, d4 = 5, d5 = 6, d6 = 7, d7 = 8; //ÜBERARBEITEN!!!!
@@ -8,17 +16,81 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 //Definie Interface-Buttons
 const byte START = 1, STOP = 2, PAUSE = 3;                //ÜBERARBEITEN!!!
-  
-int bstart_State = 0;             // Button Start Default State
+
+// Counter System Components
+#define photoRes A0       // Photo Resistor Pin
+#define laserDiode temp   // Laser Diode Pin
+
+// CNC Shield Pins
+// Stepper X: Crane Lift Axis
+#define stepPinX 2
+#define dirPinX 5
+#define limitX 9
+
+//Stepper Y: Crane Rot/Phi Axis 
+#define stepPinY 3
+#define dirPinY 6
+#define limitY 10
+
+//Stepper Z: Elego Direct Current Motors, Linked to Pins 1 & 4 (Black & Blue)
+#define stepPinZ 4
+#define dirPinZ 7
+#define limitZ 11
+
+// define Shield Pins for Spindle-Axis A (using pins D12 and D13) not used currently
+//#define stepPinA 12
+//#define dirPinA 13
+
+//Enable Outputs of all Stepper Drivers
+#define stepperEnable 8
+
+//Reset Pin of Stepper Drivers
+#define driverReset temp 
+
+//Steps Per Revolution of Steppers
+#define stepsPerRevX 200
+#define stepsPerRevY 200
+
+// Motor variables
+// Crane Lift Motor
+int moXSpeed = 350;                     // Motor X Base Speed 
+int moXMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
+int moXAccel = 20000;                   // Motor X Acceleration
+int moXDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int moXInitDistance = 2* stepsPerRevX;  // Motor X Initialization Distance
+// Crane Rot Motor
+int moYSpeed = 300;                     // Motor X Base Speed 
+int moYMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
+int moYAccel = 20000;                   // Motor X Acceleration
+int moYDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int moYInitDistance = 1* stepsPerRevY   // Motor X Initialization Distance
+
+// Stepper Motor Positions
+const int phiPos1 = stepsPerRev*1;   // Position 1 for Motor 2 in Phi-Axis
+const int phiPos2 = stepsPerRev*6;   // Position 2 for Motor 2 in Phi-Axis
+const int xPos1 = stepsPerRev*15;    // Position 1 for Motor 1 in Z-Axis
+const int xPos2 = stepsPerRev*10;    // Position 2 for Motor 1 in Z-Axis
+
+//initialize the stepper motors as existing objects
+AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
+AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
+AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Elego Motor --> move to seperate Library
+
+// General Variables
+int mode = 0;                     // Current SFC Mode State
+
+//Counter
+int count_var = 0;                // Counter Variable for balls in a Box
+int count_max = 20;               // Max goods count in Transport Box
 int count_State = 0;              // Button Count Default State
+int count_lastState = 0;          // Button Count Last State
+int amount_Box = 0;               // Counter Variable for filled Boxes
 
-//Define sign-LEDs
-const byte RED = 5, YELLOW = 6, GREEN = 7;                //ÜBERARBEITEN!!!!
+//Button States
+int bSTART_State = 0;             // Button Start Default State
+int bPause_State = 0;             // Button Start Default State
+int bSTOP_State = 1;              // Button Start Default State
 
-//Define Photoresistor 
-#define pResistor = A0;                                   //ÜBERARBEITEN!!!!
-
-//Variables for light barrier
 bool calibrated = false;          // Light barrier calibration status
 int threshold = 0;                // Light barrier threshold
 const int threshold_offset = 100; // Threshold offset, the lower the offset the higher the sensitivity
@@ -26,118 +98,51 @@ const int num_calibrate = 10;     // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
 
-// CNC Shield Pins
-  // define Shield Pins for Axis X to Z
-  // Stepper X: Crane Lift Axis
-  #define stepPinX 2
-  #define dirPinX 5
-  #define limitX 9
-
-  //Stepper Y: Crane Rot/Phi Axis 
-  #define stepPinY 3
-  #define dirPinY 6
-  #define limitY 10
-
-  //Stepper Z: Elego Direct Current Motors, Linked to Pins 1 & 4 (Black & Blue)
-  #define stepPinZ 4
-  #define dirPinZ 7
-  #define limitZ 11
-
-  // define Shield Pins for Spindle-Axis A (using pins D12 and D13) not used currently
-  #define stepPinA 12
-  #define dirPinA 13
-
-//Enable Outputs of all Stepper Drivers
-#define stepperEnable 8
-
-//Steps Per Revolution of Steppers
-#define stepsPerRevX 200
-#define stepsPerRevY 200
-
-// Motor variables
-  // Crane Lif Motor
-  int moXSpeed = 350;             // Motor X Base Speed 
-  int moXMaxSpeedMult = 2;        // Motor X Max Speed Multiplier
-  int moXAccel = 20000;           // Motor X Acceleration
-  int moXDirection = -1;          // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-  int moXInitDistance = 2* step   // Motor X Initialization Distance
-  // Crane Rot Motor
-  int moYSpeed = 300;             // Motor X Base Speed 
-  int moYMaxSpeedMult = 2;        // Motor X Max Speed Multiplier
-  int moYAccel = 20000;           // Motor X Acceleration
-  int moYDirection = -1;          // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-  int moYInitDistance = 1* step   // Motor X Initialization Distance
-
-  // Stepper Motor Positions
-  const int phiPos1 = stepsPerRev*1;   // Position 1 for Motor 2 in Phi-Axis
-  const int phiPos2 = stepsPerRev*6;   // Position 2 for Motor 2 in Phi-Axis
-  const int xPos1 = stepsPerRev*15;    // Position 1 for Motor 1 in Z-Axis
-  const int xPos2 = stepsPerRev*10;    // Position 2 for Motor 1 in Z-Axis
-
-//initialize the stepper motors as existing objects
-AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
-AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
-AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Elego Motor --> move to seperate Library
-
-//???
 HardwareSerial Serial1(PA10, PA9);
-
-//General variables for Software Control
-//Mode
-  int mode = 0;                     // System Control Mode
-//Counter
-  int count_var = 0;                // Counter Variable for balls in a Box
-  int count_max = 20;               // Max goods count in Transport Box
-  int count_State = 0;              // Button Count Default State
-  int count_lastState = 0;          // Button Count Last State
-  int amount_Box = 0;               // Counter Variable for filled Boxes
-//Button States
-  int bSTART_State = 0;             // Button Start Default State
-  int bPause_State = 0;             // Button Start Default State
-  int bSTOP_State = 1;              // Button Start Default State
 
 void setup() 
 { 
-  //Initialize the serial port (debugging reasons)
+  // initialize the serial port
   Serial.begin(9600);
-
+  
   //Initialize LCD
   lcd.begin(16,4);
-
+  
+  // Initialize Inputs
+  pinMode(limitX, INPUT);
+  pinMode(limitY, INPUT);
+  pinMode(limitZ, INPUT);
+  pinMode(button1, INPUT);
+  pinMode(button2, INPUT);
+  pinMode(button3, INPUT);
+  pinMode(photoRes, INPUT);
+  
   //Initialize Buttons as Input
   pinMode(START, INPUT);
   pinMode(STOP, INPUT);
   pinMode(PAUSE, INPUT);
-
-  //Initialize LED signs as Outputs
-  pinMode(RED, OUTPUT);
-  pinMode(YELLOW, OUTPUT);
-  pinMode(GREEN, OUTPUT);
-
-  //Initialize P-Resistor as Input
-  pinMode(pResistor, INPUT);
-
-  //Initialize Shield-Limits as Inputs
-  pinMode(limitX, INPUT);
-  pinMode(limitY, INPUT);
-  pinMode(limitZ, INPUT);
-
-  //Initialize Steppers
-  stepperX.setEnablePin(stepperEnable);
-  
+ 
+  //Initialize Outputs  
+  pinMode(ledGreen, OUTPUT);
+  pinMode(ledYellow, OUTPUT);
+  pinMode(ledRed, OUTPUT);
+  pinMode(laserDiode, OUTPUT);
   pinMode(stepperEnable, OUTPUT);
-  //digitalWrite(stepperEnable, HIGH);
+  pinMode(driverReset, OUTPUT);
   
+  stepperX.setEnablePin(stepperEnable);
+
   stepperX.setAcceleration(moXAccel);
   stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
   stepperX.setSpeed(0);
 
-  //stepperY.setAcceleration(moXAccel);
-  //stepperY.setMaxSpeed(moXDirection*moXSpeed*2);
-  //stepperY.setSpeed(0);
+  stepperY.setAcceleration(moXAccel);
+  stepperY.setMaxSpeed(moXDirection*moXSpeed*2);
+  stepperY.setSpeed(0);
 
-  stepperX.disableOutputs();
 }
+
+
 
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
 {
@@ -254,6 +259,7 @@ void loop2()
 {
   // Mode Switch Logic and Mode Logic that has to happen once
   if (digitalRead(limitX) == HIGH && mode == 0)                      //0-1 Requirement: Button Start
+
   {
     stepperX.disableOutputs();
 
@@ -288,6 +294,5 @@ void loop2()
   Serial.println(mode);
   if (mode == 1){
     stepperX.runSpeed();
-  } 
+  }
 }
-
