@@ -1,20 +1,25 @@
 #include <AccelStepper.h>
+#include <LiquidCrystal.h>
 // Buttons
 #define button1 temp  //Button Start / System is Safe to Start
 #define button2 temp  //Button Pause
 #define button3 temp  //Button Emergency Stop
 
 // Indicator Leds
-#define ledGreen temp
-#define ledYellow temp
-#define ledRed temp
+#define ledGreen 5 // Check!
+#define ledYellow 6 // Check!
+#define ledRed 7 // Check!
+
+//Define LCD pins
+const int rs = 4, en = 3, d4 = 5, d5 = 6, d6 = 7, d7 = 8; //ÜBERARBEITEN!!!!
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
+
+//Definie Interface-Buttons
+const byte START = 1, STOP = 2, PAUSE = 3;                //ÜBERARBEITEN!!!
 
 // Counter System Components
-#define photoRes temp    // Photo Resistor Pin
+#define photoRes A0       // Photo Resistor Pin
 #define laserDiode temp   // Laser Diode Pin
-
-// LCD Display
-// TODO Define Pin Connection
 
 // CNC Shield Pins
 // Stepper X: Crane Lift Axis
@@ -47,7 +52,7 @@
 #define stepsPerRevY 200
 
 // Motor variables
-// Crane Lif Motor
+// Crane Lift Motor
 int moXSpeed = 350;                     // Motor X Base Speed 
 int moXMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moXAccel = 20000;                   // Motor X Acceleration
@@ -73,8 +78,18 @@ AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Elego Motor --> move to seper
 
 // General Variables
 int mode = 0;                     // Current SFC Mode State
-int count = 0;                    // Counter
+
+//Counter
+int count_var = 0;                // Counter Variable for balls in a Box
 int count_max = 20;               // Max goods count in Transport Box
+int count_State = 0;              // Button Count Default State
+int count_lastState = 0;          // Button Count Last State
+int amount_Box = 0;               // Counter Variable for filled Boxes
+
+//Button States
+int bSTART_State = 0;             // Button Start Default State
+int bPause_State = 0;             // Button Start Default State
+int bSTOP_State = 1;              // Button Start Default State
 
 bool calibrated = false;          // Light barrier calibration status
 int threshold = 0;                // Light barrier threshold
@@ -90,6 +105,9 @@ void setup()
   // initialize the serial port
   Serial.begin(9600);
   
+  //Initialize LCD
+  lcd.begin(16,4);
+  
   // Initialize Inputs
   pinMode(limitX, INPUT);
   pinMode(limitY, INPUT);
@@ -98,7 +116,12 @@ void setup()
   pinMode(button2, INPUT);
   pinMode(button3, INPUT);
   pinMode(photoRes, INPUT);
-
+  
+  //Initialize Buttons as Input
+  pinMode(START, INPUT);
+  pinMode(STOP, INPUT);
+  pinMode(PAUSE, INPUT);
+ 
   //Initialize Outputs  
   pinMode(ledGreen, OUTPUT);
   pinMode(ledYellow, OUTPUT);
@@ -121,16 +144,122 @@ void setup()
 
 
 
-
-void loop() {
-  if (digitalRead(button1) == HIGH && mode = 0){
-    Serial.Write("Is System Safe to Start?");
-    digitalWrite(ledGreen, HIGH);
+void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
+{
+  Serial.println(barrierValue);
+  threshold = threshold + barrierValue;
+  idx = idx + 1;
+  if (idx >= num_calibrate){                      // The arithmetic median of num_calibrate is calculated
+    threshold = threshold / num_calibrate;
+    Serial.println("Sensor calbirated");
+    Serial.println(threshold);
+    threshold = threshold - threshold_offset;     // The Sensor detection threshold is the median minus a pre determined offset
+    calibrated = true; 
   }
-  
-  
+  delay(100);
+}
+
+void reference_crane()
+{
+  //write down code for reference of crane here
+}
+
+void ts1_on()   // Starts Transport System 1
+{
+  //write down code for moving TS1 here
+  //old:
+  mo1.setDirection(mo1_mD);
+  mo1.setSpeed(mo1_mS);
+}
+
+void Crane_moving()
+{
+  //write down code for transporting away the box here
+}
+
+void counter()      // If the barrier sensor value falls below the threshold an item is counted.
+{   
+  if (barrierValue < threshold){        
+    count_State = HIGH;
+  }
+  else{
+    count_State = LOW;
+  }
+  // compare the count_State to its previous state
+  if (count_State != count_lastState) {
+    // if the state has changed, increment the counter
+    if (count_State == HIGH) 
+    {
+      // if the current state is HIGH then the button went from off to on:
+      count++;
+    }
+  }
+  // save the current state as the last state, for next time through the loop
+  count_lastState = count_State;
+}
+
+void loop()         //ÜBERARBEITEN bzw. zusammenführen
+{  
+  // read the state of the pushbutton value:
+  bSTART_State = digitalRead(START);
+
   // Mode Switch Logic and Mode Logic that has to happen once
-  else if (digitalRead(limitX) == HIGH && mode == 0)                      //0-1 Requirement: Button Start
+  if (bSTART_State == HIGH && mode == 0)                      //0-1 Requirement: Button Start
+  {
+    mode = 1;
+    Serial.println("Begin Light Barrier Calibration:");
+  }
+  if (calibrated && mode == 1)                                //1-2 Sensor Calibrated
+  {
+    mode = 2;
+    ts1_on();   // Turn the motors of Transporation System 1 on
+  }
+  else if (count >= count_max && mode == 2)                   // 2-3 Requirement: Counter reaches count_max
+  {
+    mode = 3;
+    //mo1.stop(80); // Stop motor1  of TS1
+    //mo2.stop(80);
+    mode = 0;
+    count = 0;
+    amount_Box++;
+  }
+ 
+  // Mode Logic that has to be run each cycle
+  if (mode == 1){
+    barrierValue = analogRead(pResistor); // current light barrier sensor value
+    calibrate();                          // call of calibration algorithm
+    reference_crane();                    // start of crane positioning
+
+  }
+  else if (mode == 2){    // Motor 1 for Transport System 1 and Divider is ON, Counter is counting goods
+    barrierValue = analogRead(pResistor);   // current light barrier sensor value
+    counter();                              // counter logic checks if light barrier detects goods
+    Serial.println(count);
+    Serial.println(barrierValue);
+    
+    lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
+    lcd.print("Modus: ");
+    lcd.print(mode, 1);
+    lcd.setCursor(0,2);
+    lcd.print("actual goods: ");
+    lcd.print(count, 1); 
+
+  }
+  else if (mode == 3){    // After counter reaches desired value the transportsystem 1 stops, counter is resette
+  }
+  else if (mode == 4){
+    // Todo implment Actuators for Mode 4
+  }
+  else if (mode == 5){
+    // Todo implment Actuators for Mode 5
+  }
+}
+
+void loop2() 
+{
+  // Mode Switch Logic and Mode Logic that has to happen once
+  if (digitalRead(limitX) == HIGH && mode == 0)                      //0-1 Requirement: Button Start
+
   {
     stepperX.disableOutputs();
 
@@ -166,6 +295,4 @@ void loop() {
   if (mode == 1){
     stepperX.runSpeed();
   }
-  
 }
-
