@@ -63,13 +63,13 @@ int moYSpeed = 300;                     // Motor X Base Speed
 int moYMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moYAccel = 20000;                   // Motor X Acceleration
 int moYDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int moYInitDistance = 1* stepsPerRevY   // Motor X Initialization Distance
+int moYInitDistance = 1* stepsPerRevY;  // Motor X Initialization Distance
 
 // Stepper Motor Positions
-const int phiPos1 = stepsPerRev*1;   // Position 1 for Motor 2 in Phi-Axis
-const int phiPos2 = stepsPerRev*6;   // Position 2 for Motor 2 in Phi-Axis
-const int xPos1 = stepsPerRev*15;    // Position 1 for Motor 1 in Z-Axis
-const int xPos2 = stepsPerRev*10;    // Position 2 for Motor 1 in Z-Axis
+const int phiPos1 = stepsPerRevY*1;   // Position 1 for Motor 2 in Phi-Axis
+const int phiPos2 = stepsPerRevY*6;   // Position 2 for Motor 2 in Phi-Axis
+const int xPos1 = stepsPerRevX*15;    // Position 1 for Motor 1 in Z-Axis
+const int xPos2 = stepsPerRevX*10;    // Position 2 for Motor 1 in Z-Axis
 
 //initialize the stepper motors as existing objects
 AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
@@ -191,7 +191,7 @@ void counter()      // If the barrier sensor value falls below the threshold an 
     if (count_State == HIGH) 
     {
       // if the current state is HIGH then the button went from off to on:
-      count++;
+      count_var++;
     }
   }
   // save the current state as the last state, for next time through the loop
@@ -214,7 +214,7 @@ void loop()         //ÜBERARBEITEN bzw. zusammenführen
     mode = 2;
     ts1_on();   // Turn the motors of Transporation System 1 on
   }
-  else if (count >= count_max && mode == 2)                   // 2-3 Requirement: Counter reaches count_max
+  else if (count_var >= count_max && mode == 2)                   // 2-3 Requirement: Counter reaches count_max
   {
     mode = 3;
     //mo1.stop(80); // Stop motor1  of TS1
@@ -226,15 +226,15 @@ void loop()         //ÜBERARBEITEN bzw. zusammenführen
  
   // Mode Logic that has to be run each cycle
   if (mode == 1){
-    barrierValue = analogRead(pResistor); // current light barrier sensor value
-    calibrate();                          // call of calibration algorithm
+    barrierValue = analogRead(photoRes); // current light barrier sensor value
+    calibrate_photoresistor();                          // call of calibration algorithm
     reference_crane();                    // start of crane positioning
 
   }
   else if (mode == 2){    // Motor 1 for Transport System 1 and Divider is ON, Counter is counting goods
-    barrierValue = analogRead(pResistor);   // current light barrier sensor value
+    barrierValue = analogRead(photoRes);   // current light barrier sensor value
     counter();                              // counter logic checks if light barrier detects goods
-    Serial.println(count);
+    Serial.println(count_var);
     Serial.println(barrierValue);
     
     lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
