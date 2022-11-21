@@ -178,15 +178,55 @@ void counter()      // If the barrier sensor value falls below the threshold an 
 }
 
 
-void loop()         //ÜBERARBEITEN bzw. zusammenführen
+void loop()
 {  
     // Mode Switch Logic and Mode Logic that has to happen once
-  if (bStart.pressed() && mode == 0)                      //0-1 Requirement: Button Start
+  if (bStart.pressed() && mode == 0)                      //Mode 1, Requirement: Button Start
   {
-    mode = 1;
-    Serial.println("Begin Light Barrier Calibration:");
+    Serial.println("Is System Safe to Start?");
+    // TODO Implement Display on LCD and LED handlng
+    mode = mode + 1;
   }
-  if (calibrated && mode == 1)                                //1-2 Sensor Calibrated
+  else if (bStart.pressed() && mode == 1)                 //Mode 2, Requirement: Button Start
+  {
+    Serial.println("Initializing Z-Axis");
+    // Move upwards in Z-Direction to unpress limit switch
+    stepperX.setSpeed(moXDir*moXSpeed/2);
+    stepperX.setCurrentPosition(0);
+    calibrated = false;
+    mode = mode + 1;  // Switch mode
+  }
+  else if (abs(stepperX.currentPosition()) >= moXInitDistance && mode == 2)   //Mode 3, Requirement: moXInitDistance reached
+  {
+    stepperX.stop();
+    Serial.println("Initializing Phi-Axis");
+    // Move Clockwise to unpress limit switch
+    stepperY.setSpeed(moYDir*moYSpeed/2);
+    stepperY.setCurrentPosition(0);
+    mode = mode + 1;  // Switch mode
+  }
+  else if (abs(stepperY.currentPosition()) >= moYInitDistance  && mode == 3)  //Mode 4, Requirement: moYInitDistance reached
+  {
+    
+    stepperY.stop();
+    barrierValue = analogRead(photoRes); // current light barrier sensor value
+    calibrate_photoresistor();                          // call of calibration algorithm
+    
+    mode = mode + 1;
+  }
+  else if (calibrated && mode == 4)   //Mode 5, Requirement: 
+  {
+    // Implment Logic
+    
+    mode = mode + 1;
+  }
+  else if (temp && mode == 5)   //Mode 6, Requirement: 
+  {
+    // Implment Logic
+    
+    mode = mode + 1;
+  }
+  else if (temp && mode == 6)   //Mode 7, Requirement: 
   {
     mode = 2;
     ts1_on();   // Turn the motors of Transporation System 1 on
@@ -203,8 +243,7 @@ void loop()         //ÜBERARBEITEN bzw. zusammenführen
  
   // Mode Logic that has to be run each cycle
   if (mode == 1){
-    barrierValue = analogRead(photoRes); // current light barrier sensor value
-    calibrate_photoresistor();                          // call of calibration algorithm
+    
     reference_crane();                    // start of crane positioning
 
   }
@@ -222,17 +261,10 @@ void loop()         //ÜBERARBEITEN bzw. zusammenführen
     lcd.print(count, 1); 
 
   }
-  else if (mode == 3){    // After counter reaches desired value the transportsystem 1 stops, counter is resette
-  }
-  else if (mode == 4){
-    // Todo implment Actuators for Mode 4
-  }
-  else if (mode == 5){
-    // Todo implment Actuators for Mode 5
-  }
+  
 }
 
-void loop2() 
+void elego() 
 {
   // Mode Switch Logic and Mode Logic that has to happen once
   if (digitalRead(limitX) == HIGH && mode == 0)                      //0-1 Requirement: Button Start
@@ -245,24 +277,24 @@ void loop2()
     Serial.println();
     mode = mode+1; // Switch Mode
 
-    digitalWrite(stepPinY,HIGH);
+    digitalWrite(stepPinZ,HIGH);
     delay(10);
-    digitalWrite(stepPinY,LOW);
+    digitalWrite(stepPinZ,LOW);
   }
   else if (digitalRead(limitY) && mode == 1)                              //1-2 Reference Sensor Reached
   {
     
-    digitalWrite(stepPinY,HIGH);
+    digitalWrite(stepPinZ,HIGH);
     delay(10);
-    digitalWrite(stepPinY,LOW);
+    digitalWrite(stepPinZ,LOW);
     delay(10);
-    digitalWrite(stepPinY,HIGH);
+    digitalWrite(stepPinZ,HIGH);
     delay(10);
-    digitalWrite(stepPinY,LOW);
+    digitalWrite(stepPinZ,LOW);
     delay(50);
-    digitalWrite(stepPinY,HIGH);
+    digitalWrite(stepPinZ,HIGH);
     delay(10);
-    digitalWrite(stepPinY,LOW);
+    digitalWrite(stepPinZ,LOW);
 
     mode = 0 ; // Switch Mode
     
