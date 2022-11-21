@@ -84,16 +84,17 @@ Button bStop(button3)   // Button Stop
 int mode = 0;                     // Current SFC Mode State
 
 //Counter
-int count_var = 0;                // Counter Variable for balls in a Box
-int count_max = 20;               // Max goods count in Transport Box
-int count_State = 0;              // Button Count Default State
-int count_lastState = 0;          // Button Count Last State
-int amount_Box = 0;               // Counter Variable for filled Boxes
+int countVar = 0;                // Counter Variable for balls in a Box
+int countMax = 20;               // Max goods count in Transport Box
+int countState = 0;              // Button Count Default State
+int countLastState = 0;          // Button Count Last State
+int countBox = 0;                // Counter Variable for filled Boxes
+const int countBoxMaxs = 2;		 // Boxes to be filled
 
 bool calibrated = false;          // Light barrier calibration status
 int threshold = 0;                // Light barrier threshold
-const int threshold_offset = 100; // Threshold offset, the lower the offset the higher the sensitivity
-const int num_calibrate = 10;     // Number of values that are middled
+const int thresholdOffset = 100; // Threshold offset, the lower the offset the higher the sensitivity
+const int numCalibrate = 10;     // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
 
@@ -144,11 +145,11 @@ void calibrate_photoresistor()    // Before each counting cycle the light barrie
   Serial.println(barrierValue);
   threshold = threshold + barrierValue;
   idx = idx + 1;
-  if (idx >= num_calibrate){                      // The arithmetic median of num_calibrate is calculated
-    threshold = threshold / num_calibrate;
+  if (idx >= numCalibrate){                      // The arithmetic median of numCalibrate is calculated
+    threshold = threshold / numCalibrate;
     Serial.println("Sensor calbirated");
     Serial.println(threshold);
-    threshold = threshold - threshold_offset;     // The Sensor detection threshold is the median minus a pre determined offset
+    threshold = threshold - thresholdOffset;     // The Sensor detection threshold is the median minus a pre determined offset
     calibrated = true; 
   }
   delay(100);
@@ -179,22 +180,22 @@ void Crane_moving()
 void counter()      // If the barrier sensor value falls below the threshold an item is counted.
 {   
   if (barrierValue < threshold){        
-    count_State = HIGH;
+    countState = HIGH;
   }
   else{
-    count_State = LOW;
+    countState = LOW;
   }
-  // compare the count_State to its previous state
-  if (count_State != count_lastState) {
+  // compare the countState to its previous state
+  if (countState != countLastState) {
     // if the state has changed, increment the counter
-    if (count_State == HIGH) 
+    if (countState == HIGH) 
     {
       // if the current state is HIGH then the button went from off to on:
-      count_var++;
+      countVar++;
     }
   }
   // save the current state as the last state, for next time through the loop
-  count_lastState = count_State;
+  countLastState = countState;
 }
 
 
@@ -211,14 +212,14 @@ void loop()         //ÜBERARBEITEN bzw. zusammenführen
     mode = 2;
     ts1_on();   // Turn the motors of Transporation System 1 on
   }
-  else if (count_var >= count_max && mode == 2)                   // 2-3 Requirement: Counter reaches count_max
+  else if (countVar >= countMax && mode == 2)                   // 2-3 Requirement: Counter reaches countMax
   {
     mode = 3;
     //mo1.stop(80); // Stop motor1  of TS1
     //mo2.stop(80);
     mode = 0;
     count = 0;
-    amount_Box++;
+    countBox++;
   }
  
   // Mode Logic that has to be run each cycle
@@ -231,7 +232,7 @@ void loop()         //ÜBERARBEITEN bzw. zusammenführen
   else if (mode == 2){    // Motor 1 for Transport System 1 and Divider is ON, Counter is counting goods
     barrierValue = analogRead(photoRes);   // current light barrier sensor value
     counter();                              // counter logic checks if light barrier detects goods
-    Serial.println(count_var);
+    Serial.println(countVar);
     Serial.println(barrierValue);
     
     lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
