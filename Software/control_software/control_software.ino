@@ -156,27 +156,6 @@ void calibrate_photoresistor()    // Before each counting cycle the light barrie
 }
 
 
-void reference_crane()
-{
-  //write down code for reference of crane here
-}
-
-
-void ts1_on()   // Starts Transport System 1
-{
-  //write down code for moving TS1 here
-  //old:
-  mo1.setDirection(mo1_mD);
-  mo1.setSpeed(mo1_mS);
-}
-
-
-void Crane_moving()
-{
-  //write down code for transporting away the box here
-}
-
-
 void counter()      // If the barrier sensor value falls below the threshold an item is counted.
 {   
   if (barrierValue < threshold){        
