@@ -1,6 +1,7 @@
 #include <AccelStepper.h>
 #include <LiquidCrystal.h>
 #include <Button.h>
+#include <Elego_Stepper.h>
 
 // Buttons
 #define button1 PA12  //Button Start / System is Safe to Start
@@ -78,7 +79,8 @@ const int xPos2 = stepsPerRevX*10;    // Position 2 for Motor 1 in Z-Axis
 //initialize the stepper motors as existing objects
 AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
 AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
-AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Elego Motor --> move to seperate Library
+//initialize the elego motor as existing object
+Elego_Stepper stepperZ(1, stepPinZ, dirPinZ);   // Trasport System 1 Motor
 
 //intialize the Buttons as ojects
 Button bStart(button1)  // Button Start
@@ -141,6 +143,7 @@ void setup()
   stepperY.setAcceleration(moXAccel);
   stepperY.setMaxSpeed(moXDirection*moXSpeed*2);
   stepperY.setSpeed(0);
+
 
 }
 
@@ -267,46 +270,4 @@ void loop()
 
   }
   
-}
-
-void elego() 
-{
-  // Mode Switch Logic and Mode Logic that has to happen once
-  if (digitalRead(limitX) == HIGH && mode == 0)                      //0-1 Requirement: Button Start
-
-  {
-    stepperX.disableOutputs();
-
-    stepperX.setSpeed(moXDirection*moXSpeed);
-
-    Serial.println();
-    mode = mode+1; // Switch Mode
-
-    digitalWrite(stepPinZ,HIGH);
-    delay(10);
-    digitalWrite(stepPinZ,LOW);
-  }
-  else if (digitalRead(limitY) && mode == 1)                              //1-2 Reference Sensor Reached
-  {
-    
-    digitalWrite(stepPinZ,HIGH);
-    delay(10);
-    digitalWrite(stepPinZ,LOW);
-    delay(10);
-    digitalWrite(stepPinZ,HIGH);
-    delay(10);
-    digitalWrite(stepPinZ,LOW);
-    delay(50);
-    digitalWrite(stepPinZ,HIGH);
-    delay(10);
-    digitalWrite(stepPinZ,LOW);
-
-    mode = 0 ; // Switch Mode
-    
-  }
-  
-  Serial.println(mode);
-  if (mode == 1){
-    stepperX.runSpeed();
-  }
 }
