@@ -3,22 +3,27 @@
 #include <Button.h>
 
 // Buttons
-#define button1 temp  //Button Start / System is Safe to Start
-#define button2 temp  //Button Pause
-#define button3 temp  //Button Emergency Stop
+#define button1 PA12  //Button Start / System is Safe to Start
+#define button2 PA11  //Button Pause
+#define button3 PB12  //Button Emergency Stop
 
 // Indicator Leds
-#define ledGreen 5 // Check!
-#define ledYellow 6 // Check!
-#define ledRed 7 // Check!
+#define ledGreen PC8  //Green LED
+#define ledYellow PC6 //Yellow LED
+#define ledRed PC5    //Red LED
 
 //Define LCD pins
-const int rs = 4, en = 3, d4 = 5, d5 = 6, d6 = 7, d7 = 8; //ÜBERARBEITEN!!!!
+#define rs PB7
+#define en PC13
+#define d4 PC14
+#define d5 PC15
+#define d6 PF0
+#define d7 PF1
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
 
 // Counter System Components
-#define photoRes A0       // Photo Resistor Pin
-#define laserDiode temp   // Laser Diode Pin
+#define photoRes PB2     // Photo Resistor Pin
+//#define laserDiode PB1   // Optional Laser Diode Pin Currently Always ON
 
 // CNC Shield Pins
 // Stepper X: Crane Lift Axis
@@ -41,10 +46,10 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 //#define dirPinA 13
 
 //Enable Outputs of all Stepper Drivers
-#define stepperEnable 8
+#define stepperEnable 8     
 
 //Reset Pin of Stepper Drivers
-#define driverReset temp 
+#define driverZReset PC9    // Resets Stepper Driver Z
 
 //Steps Per Revolution of Steppers
 #define stepsPerRevX 200
@@ -89,12 +94,12 @@ int countMax = 20;               // Max goods count in Transport Box
 int countState = 0;              // Button Count Default State
 int countLastState = 0;          // Button Count Last State
 int countBox = 0;                // Counter Variable for filled Boxes
-const int countBoxMaxs = 2;		 // Boxes to be filled
+const int countBoxMaxs = 2;		   // Boxes to be filled
 
 bool calibrated = false;          // Light barrier calibration status
 int threshold = 0;                // Light barrier threshold
-const int thresholdOffset = 100; // Threshold offset, the lower the offset the higher the sensitivity
-const int numCalibrate = 10;     // Number of values that are middled
+const int thresholdOffset = 100;  // Threshold offset, the lower the offset the higher the sensitivity
+const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
 
@@ -125,7 +130,7 @@ void setup()
   pinMode(ledRed, OUTPUT);
   pinMode(laserDiode, OUTPUT);
   pinMode(stepperEnable, OUTPUT);
-  pinMode(driverReset, OUTPUT);
+  pinMode(driverZReset, OUTPUT);
   
   stepperX.setEnablePin(stepperEnable);
 
