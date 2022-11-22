@@ -36,7 +36,7 @@ void Elego_Stepper::stop(int reverseTime){
 	  }
 }
 void Elego_Stepper::reset(){
-	digitalWrite(_resetPin, HIGH);	// Reset Motor Driver
+	digitalWrite(_resetPin, LOW);	// Reset Motor Driver
 	delay(10);
-	digitalWrite(_resetPin, LOW);
+	digitalWrite(_resetPin, HIGH);
 }

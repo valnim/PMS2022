@@ -10,7 +10,7 @@ Elego_Stepper::Elego_Stepper(int stepPin, int resetPin) {
 	reset();
 }
 void Elego_Stepper::start(){
-	if (!_running)                   // Start
+	if (!_running)                   // Start (Move to Step 1)
 	  {
 		digitalWrite(_stepPin, HIGH);
 		delay(10);
@@ -19,7 +19,7 @@ void Elego_Stepper::start(){
 	  }
 }
 void Elego_Stepper::stop(int reverseTime){
-	if (_running)                   // Stop
+	if (_running)                   // Stop (Move to Step 0)
 	  {
 		digitalWrite(_stepPin, HIGH);
 		delay(10);
@@ -36,7 +36,7 @@ void Elego_Stepper::stop(int reverseTime){
 	  }
 }
 void Elego_Stepper::reset(){
-	digitalWrite(_resetPin, HIGH);
+	digitalWrite(_resetPin, HIGH);	// Reset Motor Driver
 	delay(10);
 	digitalWrite(_resetPin, LOW);
 }
