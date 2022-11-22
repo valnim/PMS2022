@@ -82,7 +82,7 @@ const int xPos2 = stepsPerRevX*10;    // Position 2 for Motor 1 in Z-Axis
 AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
 AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
 //initialize the elego motor as existing object
-Elego_Stepper stepperZ(stepPinZ, dirPinZ);   // Transport System 1 Motor
+Elego_Stepper stepperZ(stepPinZ, driverZReset);   // Transport System 1 Motor
 
 //intialize the Buttons as ojects
 Button bStart(button1);  // Button Start
@@ -107,7 +107,7 @@ const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
 
-HardwareSerial Serial1(PA10, PA9);
+//HardwareSerial Serial1(PA10, PA9);
 
 void setup() 
 { 
@@ -147,7 +147,7 @@ void setup()
   stepperY.setSpeed(0);
 
   stepperZ.reset();
-
+  Serial.println("Setup Finished");
 }
 
 
@@ -191,19 +191,22 @@ void counter()      // If the barrier sensor value falls below the threshold an 
 
 void loop()
 {  
+  //Serial.println("Mode:");
+  //Serial.println(mode);
     // Mode Switch Logic and Mode Logic that has to happen once
-  if (bStart.pressed() && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
+  if (digitalRead(button1) && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
   {
     Serial.println("Is System Safe to Start?");
     // TODO Implement Display on LCD and LED handling
     mode = mode + 1;
   }
-  else if (bStart.pressed() && mode == 1)                 //Mode 2 Init X, Requirement: Button Start
+  else if (digitalRead(button1) && mode == 1)                 //Mode 2 Init X, Requirement: Button Start
   {
-    Serial.println("Initializing Z-Axis");
+    Serial.println("Initializing Lift-Axis");
     // Move upwards in Z-Direction to unpress limit switch
-    stepperX.setSpeed(moXDirection*moXSpeed/2);
     stepperX.setCurrentPosition(0);
+    stepperX.setSpeed(moXDirection*moXSpeed/2);
+    stepperX.disableOutputs();    // Enables All Steppers
     calibrated = false;
     mode = mode + 1;  // Switch mode
   }
@@ -212,8 +215,8 @@ void loop()
     stepperX.stop();
     Serial.println("Initializing Phi-Axis");
     // Move Clockwise to unpress limit switch
-    stepperY.setSpeed(moYDirection*moYSpeed/2);
     stepperY.setCurrentPosition(0);
+    stepperY.setSpeed(moYDirection*moYSpeed/2);
     mode = mode + 1;  // Switch mode
   }
   else if ((abs(stepperY.currentPosition()) >= moYInitDistance  && mode == 3) || mode == 12)  //Mode 4 Calibrate Light Barrier, Requirement: moYInitDistance reached
@@ -290,14 +293,16 @@ void loop()
     else{
       mode = 0;
       countBox = 0;
+      stepperX.enableOutputs();    // Disables All Steppers
     }
   }
   
+  stepperX.runSpeed();
+  stepperY.runSpeed();
  
   // Mode Logic that has to be run each cycle
   if (mode == 0 || mode == 2 || mode == 3 || mode == 4 || mode == 6 || mode == 7 || mode == 8 || mode == 9 || mode == 10 || mode == 11){
-    stepperX.runSpeed();
-    stepperY.runSpeed();
+    
   }
   else if (mode == 5 ){    
     barrierValue = analogRead(photoRes);   // current light barrier sensor value
