@@ -14,6 +14,7 @@
 #define ledRed PC5    //Red LED
 
 //Define LCD pins
+//const int rs = PB7, en = PC13, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1;
 #define rs PB7
 #define en PC13
 #define d4 PC14
@@ -64,7 +65,7 @@ int moXAccel = 20000;                   // Motor X Acceleration
 int moXDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
 int moXInitDistance = 2* stepsPerRevX;  // Motor X Initialization Distance
 // Crane Rot Motor
-int moYSpeed = 300;                     // Motor X Base Speed 
+int moYSpeed = 350;                     // Motor X Base Speed 
 int moYMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moYAccel = 20000;                   // Motor X Acceleration
 int moYDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
@@ -115,7 +116,7 @@ void setup()
   Serial.begin(9600);
   
   //Initialize LCD
-  lcd.begin(16,4);
+  lcd.begin(16,2);
   
   // Initialize Inputs
   pinMode(limitX, INPUT);
@@ -148,24 +149,62 @@ void setup()
 
   stepperZ.reset();
   Serial.println("Setup Finished");
-}
+  
+  LED(2);
+  //digitalWrite(ledRed, LOW);
+  //digitalWrite(ledYellow, HIGH);
+  //digitalWrite(ledGreen, LOW);
 
+  lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
+  lcd.print("Setup finished");
+  lcd.setCursor(1,0);
+  lcd.print("press Start");
+}
 
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
 {
-  Serial.println(barrierValue);
-  threshold = threshold + barrierValue;
-  idx = idx + 1;
-  if (idx >= numCalibrate){                      // The arithmetic median of numCalibrate is calculated
-    threshold = threshold / numCalibrate;
-    Serial.println("Sensor calbirated");
-    Serial.println(threshold);
-    threshold = threshold - thresholdOffset;     // The Sensor detection threshold is the median minus a pre determined offset
-    calibrated = true; 
+  while(idx<=numCalibrate)
+  {
+    barrierValue = analogRead(photoRes);      // current light barrier sensor value
+    Serial.println(barrierValue);
+    threshold = threshold + barrierValue;
+    idx = idx + 1;
   }
-  delay(100);
+  threshold = threshold / numCalibrate;
+  Serial.println("Sensor calibrated");
+  Serial.print("threshold :");
+  Serial.println(threshold);
+  threshold = threshold - thresholdOffset;     // The Sensor detection threshold is the median minus a pre determined offset
+  calibrated = true; 
 }
 
+void LED(int LED_mode)
+{
+  if (LED_mode == 1)
+  {
+    digitalWrite(ledRed, HIGH);  
+    digitalWrite(ledYellow, LOW);
+    digitalWrite(ledGreen, LOW);    
+  }
+  else if (LED_mode == 2)
+  {
+    digitalWrite(ledRed, LOW);
+    digitalWrite(ledYellow, HIGH);
+    digitalWrite(ledGreen, LOW);
+  }
+  else if (LED_mode == 3)
+  {
+    digitalWrite(ledRed, LOW);
+    digitalWrite(ledYellow, LOW);
+    digitalWrite(ledGreen, HIGH);
+  }
+  else
+  {
+    digitalWrite(ledRed, LOW);
+    digitalWrite(ledYellow, LOW);
+    digitalWrite(ledGreen, LOW);
+  }
+}
 
 void counter()      // If the barrier sensor value falls below the threshold an item is counted.
 {   
@@ -188,7 +227,6 @@ void counter()      // If the barrier sensor value falls below the threshold an 
   countLastState = countState;
 }
 
-
 void loop()
 {  
   //Serial.println("Mode:");
@@ -197,7 +235,16 @@ void loop()
   if (digitalRead(button1) && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
   {
     Serial.println("Is System Safe to Start?");
+    
     // TODO Implement Display on LCD and LED handling
+    lcd.setCursor(0,0);
+    lcd.print("Is System safe?");
+    lcd.setCursor(1,0);
+    lcd.print(mode, 1);
+    delay(2000);
+
+    LED(2);
+    
     mode = mode + 1;
   }
   else if (digitalRead(button1) && mode == 1)                 //Mode 2 Init X, Requirement: Button Start
@@ -212,7 +259,9 @@ void loop()
   }
   else if (abs(stepperX.currentPosition()) >= moXInitDistance && mode == 2)   //Mode 3 Init Phi, Requirement: moXInitDistance reached
   {
-    stepperX.stop();
+    Serial.println("finished Init Lift-Axis");
+    stepperX.setSpeed(0);
+    //stepperX.stop();
     Serial.println("Initializing Phi-Axis");
     // Move Clockwise to unpress limit switch
     stepperY.setCurrentPosition(0);
@@ -221,13 +270,22 @@ void loop()
   }
   else if ((abs(stepperY.currentPosition()) >= moYInitDistance  && mode == 3) || mode == 12)  //Mode 4 Calibrate Light Barrier, Requirement: moYInitDistance reached
   {
-    stepperY.stop();
-    barrierValue = analogRead(photoRes); // current light barrier sensor value
+    Serial.println("finished Init Phi-Axis");
+    stepperY.setSpeed(0);
+    //stepperY.stop();
+    
+    Serial.println("Begin Light Barrier Calibration:");
+
     calibrate_photoresistor();           // call of calibration algorithm
     mode = mode + 1;
   }
   else if (calibrated && mode == 4)   //Mode 5 Divide Goods, Requirement: Ligth Barrier calibrated
   {
+    Serial.println("Start of Box filling");
+    LED(3);
+    
+    counter();
+
     stepperZ.start();
     mode = mode + 1;
   }
@@ -306,9 +364,9 @@ void loop()
   }
   else if (mode == 5 ){    
     barrierValue = analogRead(photoRes);   // current light barrier sensor value
-    counter();                              // counter logic checks if light barrier detects goods  
-    Serial.println(countVar);
-    Serial.println(barrierValue);
+    //counter();                              // counter logic checks if light barrier detects goods  
+    //Serial.println(countVar);
+    //Serial.println(barrierValue);
     
     lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
     lcd.print("Modus: ");
