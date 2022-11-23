@@ -153,7 +153,6 @@ void setup()
   lcd.setCursor(1,0);
   lcd.print("press Start");
 
-  digitalWrite(dirPinZ, LOW);
   stepperZ.reset();
 }
 
@@ -281,8 +280,8 @@ void loop()
   }
   else if (countVar >= countMax && mode == 5)   //Mode 6 Roation Ref, Requirement: countVar >= countMax
   {
-    stepperZ.stop(reverseTimeZ);
-    //stepperZ.reset();
+    //stepperZ.stop(reverseTimeZ);
+    stepperZ.reset();
 
     stepperY.setSpeed(-moYDirection*moYSpeed);
 
@@ -335,13 +334,14 @@ void loop()
   {
     stepperX.setSpeed(0);
     countBox = countBox + 1;
+    calibrated = false;
 
     if (countBox < countBoxMax){
-      mode = 12;
       idx = 0;
       threshold = 0;
       stepperZ.reset();
       Serial.println("Box delivered");
+      mode = 12;
     }
     else{
       mode = 0;
@@ -353,6 +353,7 @@ void loop()
   
   stepperX.runSpeed();
   stepperY.runSpeed();
+  
 
   if (digitalRead(button2)){
     stepperZ.reset();
