@@ -138,6 +138,7 @@ void setup()
   //pinMode(laserDiode, OUTPUT);
   pinMode(stepperEnable, OUTPUT);
   pinMode(driverZReset, OUTPUT);
+  pinMode(dirPinZ, OUTPUT);
   
   stepperX.setEnablePin(stepperEnable);
 
@@ -149,7 +150,7 @@ void setup()
   stepperY.setMaxSpeed(moYDirection*moXSpeed*2);
   stepperY.setSpeed(0);
 
-  stepperZ.reset();
+  
   Serial.println("Setup Finished");
   
   LED(2);
@@ -158,6 +159,9 @@ void setup()
   lcd.print("Setup finished");
   lcd.setCursor(1,0);
   lcd.print("press Start");
+
+  digitalWrite(dirPinZ, LOW);
+  stepperZ.reset();
 }
 
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
@@ -229,7 +233,7 @@ void loop()
   //Serial.println("Mode:");
   //Serial.println(mode);
     // Mode Switch Logic and Mode Logic that has to happen once
-  if (digitalRead(button2) && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
+  if (digitalRead(button1) && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
   {
     Serial.println("Is System Safe to Start?");
     
@@ -244,7 +248,7 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (digitalRead(button3) && mode == 1)                 //Mode 2 Init X, Requirement: Button Start
+  else if (digitalRead(button1) && mode == 1)                 //Mode 2 Init X, Requirement: Button Start
   {
     Serial.println("Initializing Lift-Axis");
     // Move upwards in Z-Direction to unpress limit switch
@@ -272,7 +276,6 @@ void loop()
     
     Serial.println("Begin Light Barrier Calibration:");
 
-    
     mode = 4;
   }
   else if (calibrated && mode == 4)   //Mode 5 Divide Goods, Requirement: Ligth Barrier calibrated
@@ -286,7 +289,8 @@ void loop()
   else if (countVar >= countMax && mode == 5)   //Mode 6 Roation Ref, Requirement: countVar >= countMax
   {
     stepperZ.stop(reverseTimeZ);
-    
+    //stepperZ.reset();
+
     stepperY.setSpeed(-moYDirection*moYSpeed);
 
     countVar = 0;
@@ -356,8 +360,6 @@ void loop()
   
   stepperX.runSpeed();
   stepperY.runSpeed();
-
-  //Serial.println(mode);
 
   if (digitalRead(button2)){
     stepperZ.reset();
