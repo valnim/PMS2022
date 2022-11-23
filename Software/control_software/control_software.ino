@@ -335,11 +335,11 @@ void loop()
     stepperX.setSpeed(0);
     countBox = countBox + 1;
     calibrated = false;
+    idx = 0;
+    threshold = 0;
+    stepperZ.reset();
 
     if (countBox < countBoxMax){
-      idx = 0;
-      threshold = 0;
-      stepperZ.reset();
       Serial.println("Box delivered");
       mode = 12;
     }
