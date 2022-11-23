@@ -15,13 +15,13 @@
 
 //Define LCD pins
 //const int rs = PB7, en = PA15, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1;
-#define rs PB7
-#define en PA15
-#define d4 PC14
-#define d5 PC15
-#define d6 PF0
-#define d7 PF1
-
+// #define rs PB7
+// #define en PA15
+// #define d4 PC14
+// #define d5 PC15
+// #define d6 PF0
+// #define d7 PF1
+const int rs = PB7, en = PA15, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1; 
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
 
 // Counter System Components
@@ -72,7 +72,7 @@ int moYAccel = 20000;                   // Motor X Acceleration
 int moYDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
 int moYInitDistance = 1* stepsPerRevY;  // Motor X Initialization Distance
 // Transport System 1 Motors
-int reverseTimeZ = 30;
+int reverseTimeZ = 300;
 
 // Stepper Motor Positions
 const int phiPos1 = stepsPerRevY*1;   // Position 1 for Motor 2 in Phi-Axis
@@ -292,7 +292,7 @@ void loop()
     countVar = 0;
     mode = mode + 1;
   }
-  else if (!limitY && mode == 6)   //Mode 7 Lift Ref, Requirement: Limit Switch Rot reached
+  else if (!digitalRead(limitY) && mode == 6)   //Mode 7 Lift Ref, Requirement: Limit Switch Rot reached
   {
     stepperY.setSpeed(0);
     stepperY.setCurrentPosition(0);
@@ -301,7 +301,7 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (!limitX && mode == 7)     //Mode 8 Move to phiPos1, Requirement: Limit Switch Lift reached
+  else if (!digitalRead(limitX) && mode == 7)     //Mode 8 Move to phiPos1, Requirement: Limit Switch Lift reached
   {
     stepperX.setSpeed(0);
     stepperX.setCurrentPosition(0);
@@ -373,6 +373,13 @@ void loop()
     lcd.setCursor(0,2);
     lcd.print("actual goods: ");
     lcd.print(countVar, 1); 
-
+  }
+  else if (mode == 6){
+    Serial.println(mode);
+    Serial.println(digitalRead(limitY));
+  }
+  else if (mode == 7){
+    Serial.println(mode);
+    Serial.println(digitalRead(limitX));
   }
 }
