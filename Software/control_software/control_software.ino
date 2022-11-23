@@ -60,19 +60,19 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 // Motor variables
 // Crane Lift Motor
-int moXSpeed = 350;                     // Motor X Base Speed 
+int moXSpeed = 400;                     // Motor X Base Speed 
 int moXMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moXAccel = 20000;                   // Motor X Acceleration
 int moXDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
 int moXInitDistance = 2* stepsPerRevX;  // Motor X Initialization Distance
 // Crane Rot Motor
-int moYSpeed = 350;                     // Motor X Base Speed 
+int moYSpeed = 400;                     // Motor X Base Speed 
 int moYMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moYAccel = 20000;                   // Motor X Acceleration
 int moYDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
 int moYInitDistance = 1* stepsPerRevY;  // Motor X Initialization Distance
 // Transport System 1 Motors
-int reverseTimeZ = 300;
+int reverseTimeZ = 50;
 
 // Stepper Motor Positions
 const int phiPos1 = stepsPerRevY*1;   // Position 1 for Motor 2 in Phi-Axis
@@ -104,7 +104,7 @@ const int countBoxMax = 2;		   // Boxes to be filled
 
 bool calibrated = false;          // Light barrier calibration status
 int threshold = 0;                // Light barrier threshold
-const int thresholdOffset = 100;  // Threshold offset, the lower the offset the higher the sensitivity
+const int thresholdOffset = 50;  // Threshold offset, the lower the offset the higher the sensitivity
 const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
@@ -229,7 +229,7 @@ void loop()
   //Serial.println("Mode:");
   //Serial.println(mode);
     // Mode Switch Logic and Mode Logic that has to happen once
-  if (digitalRead(button1) && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
+  if (digitalRead(button2) && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
   {
     Serial.println("Is System Safe to Start?");
     
@@ -244,12 +244,12 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (digitalRead(button1) && mode == 1)                 //Mode 2 Init X, Requirement: Button Start
+  else if (digitalRead(button3) && mode == 1)                 //Mode 2 Init X, Requirement: Button Start
   {
     Serial.println("Initializing Lift-Axis");
     // Move upwards in Z-Direction to unpress limit switch
     stepperX.setCurrentPosition(0);
-    stepperX.setSpeed(moXDirection*moXSpeed/2);
+    stepperX.setSpeed(moXDirection*moXSpeed);
     stepperX.disableOutputs();    // Enables All Steppers
     calibrated = false;
     mode = mode + 1;  // Switch mode
@@ -262,7 +262,7 @@ void loop()
     Serial.println("Initializing Phi-Axis");
     // Move Clockwise to unpress limit switch
     stepperY.setCurrentPosition(0);
-    stepperY.setSpeed(moYDirection*moYSpeed/2);
+    stepperY.setSpeed(moYDirection*moYSpeed);
     mode = mode + 1;  // Switch mode
   }
   else if ((abs(stepperY.currentPosition()) >= moYInitDistance  && mode == 3) || mode == 12)  //Mode 4 Calibrate Light Barrier, Requirement: moYInitDistance reached
@@ -273,7 +273,7 @@ void loop()
     Serial.println("Begin Light Barrier Calibration:");
 
     
-    mode = mode + 1;
+    mode = 4;
   }
   else if (calibrated && mode == 4)   //Mode 5 Divide Goods, Requirement: Ligth Barrier calibrated
   {
@@ -292,7 +292,7 @@ void loop()
     countVar = 0;
     mode = mode + 1;
   }
-  else if (!digitalRead(limitY) && mode == 6)   //Mode 7 Lift Ref, Requirement: Limit Switch Rot reached
+  else if (digitalRead(limitY) && mode == 6)   //Mode 7 Lift Ref, Requirement: Limit Switch Rot reached
   {
     stepperY.setSpeed(0);
     stepperY.setCurrentPosition(0);
@@ -301,7 +301,7 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (!digitalRead(limitX) && mode == 7)     //Mode 8 Move to phiPos1, Requirement: Limit Switch Lift reached
+  else if (digitalRead(limitX) && mode == 7)     //Mode 8 Move to phiPos1, Requirement: Limit Switch Lift reached
   {
     stepperX.setSpeed(0);
     stepperX.setCurrentPosition(0);
@@ -318,7 +318,7 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (abs(stepperY.currentPosition()) >= xPos1 && mode == 9)     //Mode 10 Move to phiPo2, Requirement: 
+  else if (abs(stepperX.currentPosition()) >= xPos1 && mode == 9)     //Mode 10 Move to phiPo2, Requirement: 
   {
     stepperX.setSpeed(0);
 
@@ -334,18 +334,23 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (abs(stepperY.currentPosition()) <= xPos2 && mode == 11)     //Mode 11 Move to xPos2, Requirement: 
+  else if (abs(stepperX.currentPosition()) <= xPos2 && mode == 11)     //Mode 11 Move to xPos2, Requirement: 
   {
     stepperX.setSpeed(0);
     countBox = countBox + 1;
 
     if (countBox < countBoxMax){
       mode = 12;
+      idx = 0;
+      threshold = 0;
+      stepperZ.reset();
+      Serial.println("Box delivered");
     }
     else{
       mode = 0;
       countBox = 0;
       stepperX.enableOutputs();    // Disables All Steppers
+      Serial.println("Last Box delivered");
     }
   }
   
@@ -354,6 +359,9 @@ void loop()
 
   //Serial.println(mode);
 
+  if (digitalRead(button2)){
+    stepperZ.reset();
+  }
  
   // Mode Logic that has to be run each cycle
   if (mode == 4){
@@ -373,13 +381,5 @@ void loop()
     lcd.setCursor(0,2);
     lcd.print("actual goods: ");
     lcd.print(countVar, 1); 
-  }
-  else if (mode == 6){
-    Serial.println(mode);
-    Serial.println(digitalRead(limitY));
-  }
-  else if (mode == 7){
-    Serial.println(mode);
-    Serial.println(digitalRead(limitX));
   }
 }
