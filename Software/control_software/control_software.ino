@@ -14,14 +14,7 @@
 #define ledRed PC5    //Red LED
 
 //Define LCD pins
-//const int rs = PB7, en = PA15, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1;
-// #define rs PB7
-// #define en PA15
-// #define d4 PC14
-// #define d5 PC15
-// #define d6 PF0
-// #define d7 PF1
-const int rs = PB7, en = PA15, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1; 
+const int rs = PB7, en = PC13, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1; 
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
 
 // Counter System Components
