@@ -163,19 +163,17 @@ void setup()
 
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
 {
-  while(idx<=numCalibrate)
-  {
-    barrierValue = analogRead(photoRes);      // current light barrier sensor value
-    Serial.println(barrierValue);
-    threshold = threshold + barrierValue;
-    idx = idx + 1;
+  Serial.println(barrierValue);
+  threshold = threshold + barrierValue;
+  idx = idx + 1;
+  if (idx >= numCalibrate){
+    threshold = threshold / numCalibrate;
+    Serial.println("Sensor calbirated");
+    Serial.println(threshold);
+    threshold = threshold - thresholdOffset;
+    calibrated = true; 
   }
-  threshold = threshold / numCalibrate;
-  Serial.println("Sensor calibrated");
-  Serial.print("threshold :");
-  Serial.println(threshold);
-  threshold = threshold - thresholdOffset;     // The Sensor detection threshold is the median minus a pre determined offset
-  calibrated = true; 
+  delay(100);
 }
 
 void LED(int LED_mode)
@@ -276,7 +274,7 @@ void loop()
     
     Serial.println("Begin Light Barrier Calibration:");
 
-    calibrate_photoresistor();           // call of calibration algorithm
+    
     mode = mode + 1;
   }
   else if (calibrated && mode == 4)   //Mode 5 Divide Goods, Requirement: Ligth Barrier calibrated
@@ -357,16 +355,21 @@ void loop()
   
   stepperX.runSpeed();
   stepperY.runSpeed();
+
+  //Serial.println(mode);
+
  
   // Mode Logic that has to be run each cycle
-  if (mode == 0 || mode == 2 || mode == 3 || mode == 4 || mode == 6 || mode == 7 || mode == 8 || mode == 9 || mode == 10 || mode == 11){
-    
+  if (mode == 4){
+    barrierValue = analogRead(photoRes);
+    Serial.println(barrierValue);
+    calibrate_photoresistor();           // call of calibration algorithm
   }
   else if (mode == 5 ){    
     barrierValue = analogRead(photoRes);   // current light barrier sensor value
-    //counter();                              // counter logic checks if light barrier detects goods  
-    //Serial.println(countVar);
-    //Serial.println(barrierValue);
+    counter();                              // counter logic checks if light barrier detects goods  
+    Serial.println(countVar);
+    Serial.println(barrierValue);
     
     lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
     lcd.print("Modus: ");
