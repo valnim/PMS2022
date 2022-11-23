@@ -14,17 +14,18 @@
 #define ledRed PC5    //Red LED
 
 //Define LCD pins
-//const int rs = PB7, en = PC13, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1;
+//const int rs = PB7, en = PA15, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1;
 #define rs PB7
-#define en PC13
+#define en PA15
 #define d4 PC14
 #define d5 PC15
 #define d6 PF0
 #define d7 PF1
+
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
 
 // Counter System Components
-#define photoRes PB2     // Photo Resistor Pin
+#define photoRes PC4     // Photo Resistor Pin
 //#define laserDiode PB1   // Optional Laser Diode Pin Currently Always ON
 
 // CNC Shield Pins
@@ -71,7 +72,7 @@ int moYAccel = 20000;                   // Motor X Acceleration
 int moYDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
 int moYInitDistance = 1* stepsPerRevY;  // Motor X Initialization Distance
 // Transport System 1 Motors
-int reverseTimeZ = 50;
+int reverseTimeZ = 30;
 
 // Stepper Motor Positions
 const int phiPos1 = stepsPerRevY*1;   // Position 1 for Motor 2 in Phi-Axis
@@ -95,7 +96,7 @@ int mode = 0;                     // Current SFC Mode State
 
 //Counter
 int countVar = 0;                // Counter Variable for balls in a Box
-int countMax = 20;               // Max goods count in Transport Box
+int countMax = 5;               // Max goods count in Transport Box
 int countState = 0;              // Button Count Default State
 int countLastState = 0;          // Button Count Last State
 int countBox = 0;                // Counter Variable for filled Boxes
@@ -117,6 +118,7 @@ void setup()
   
   //Initialize LCD
   lcd.begin(16,2);
+  lcd.print("Hello");
   
   // Initialize Inputs
   pinMode(limitX, INPUT);
@@ -151,9 +153,6 @@ void setup()
   Serial.println("Setup Finished");
   
   LED(2);
-  //digitalWrite(ledRed, LOW);
-  //digitalWrite(ledYellow, HIGH);
-  //digitalWrite(ledGreen, LOW);
 
   lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
   lcd.print("Setup finished");
@@ -259,7 +258,7 @@ void loop()
   {
     Serial.println("finished Init Lift-Axis");
     stepperX.setSpeed(0);
-    //stepperX.stop();
+
     Serial.println("Initializing Phi-Axis");
     // Move Clockwise to unpress limit switch
     stepperY.setCurrentPosition(0);
@@ -270,7 +269,6 @@ void loop()
   {
     Serial.println("finished Init Phi-Axis");
     stepperY.setSpeed(0);
-    //stepperY.stop();
     
     Serial.println("Begin Light Barrier Calibration:");
 
@@ -281,8 +279,6 @@ void loop()
   {
     Serial.println("Start of Box filling");
     LED(3);
-    
-    counter();
 
     stepperZ.start();
     mode = mode + 1;
@@ -296,18 +292,18 @@ void loop()
     countVar = 0;
     mode = mode + 1;
   }
-  else if (limitY && mode == 6)   //Mode 7 Lift Ref, Requirement: Limit Switch Rot reached
+  else if (!limitY && mode == 6)   //Mode 7 Lift Ref, Requirement: Limit Switch Rot reached
   {
-    stepperY.stop();
+    stepperY.setSpeed(0);
     stepperY.setCurrentPosition(0);
 
     stepperX.setSpeed(-moXDirection*moXSpeed);
     
     mode = mode + 1;
   }
-  else if (limitX && mode == 7)     //Mode 8 Move to phiPos1, Requirement: Limit Switch Lift reached
+  else if (!limitX && mode == 7)     //Mode 8 Move to phiPos1, Requirement: Limit Switch Lift reached
   {
-    stepperX.stop();
+    stepperX.setSpeed(0);
     stepperX.setCurrentPosition(0);
 
     stepperY.setSpeed(moYDirection*moYSpeed);
@@ -316,7 +312,7 @@ void loop()
   }
   else if (abs(stepperY.currentPosition()) >= phiPos1 && mode == 8)     //Mode 9 Move to xPos1, Requirement: 
   {
-    stepperY.stop();
+    stepperY.setSpeed(0);
 
     stepperX.setSpeed(moXDirection*moXSpeed);
     
@@ -324,7 +320,7 @@ void loop()
   }
   else if (abs(stepperY.currentPosition()) >= xPos1 && mode == 9)     //Mode 10 Move to phiPo2, Requirement: 
   {
-    stepperX.stop();
+    stepperX.setSpeed(0);
 
     stepperY.setSpeed(moYDirection*moYSpeed);
     
@@ -332,7 +328,7 @@ void loop()
   }
   else if (abs(stepperY.currentPosition()) >= phiPos2 && mode == 10)     //Mode 11 Move to xPos2, Requirement: 
   {
-    stepperY.stop();
+    stepperY.setSpeed(0);
 
     stepperX.setSpeed(-moXDirection*moXSpeed);
     
@@ -340,7 +336,7 @@ void loop()
   }
   else if (abs(stepperY.currentPosition()) <= xPos2 && mode == 11)     //Mode 11 Move to xPos2, Requirement: 
   {
-    stepperX.stop();
+    stepperX.setSpeed(0);
     countBox = countBox + 1;
 
     if (countBox < countBoxMax){
