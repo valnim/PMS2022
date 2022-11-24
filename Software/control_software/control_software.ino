@@ -5,8 +5,8 @@
 
 // Buttons
 #define button1 PA12  //Button Start / System is Safe to Start
-#define button2 PA11  //Button Pause
-#define button3 PB12  //Button Emergency Stop
+#define button2 PA11  //Button Pause            // Move to Interrupt able PIN !!!
+#define button3 PB12  //Button Emergency Stop   // Move to Interrupt able PIN !!!
 
 // Indicator Leds
 #define ledGreen PC8  //Green LED
@@ -25,12 +25,12 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 // Stepper X: Crane Lift Axis
 #define stepPinX 2
 #define dirPinX 5
-#define limitX 9
+#define limitX 9      // Move to Interrupt able PIN !!!
 
 //Stepper Y: Crane Rot/Phi Axis 
 #define stepPinY 3
 #define dirPinY 6
-#define limitY 10
+#define limitY 10     // Move to Interrupt able PIN !!!
 
 //Stepper Z: Elego Direct Current Motors, Linked to Pins 1 & 4 (Black & Blue)
 #define stepPinZ 4
@@ -57,13 +57,13 @@ int moXSpeed = 400;                     // Motor X Base Speed
 int moXMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moXAccel = 20000;                   // Motor X Acceleration
 int moXDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int moXInitDistance = 2* stepsPerRevX;  // Motor X Initialization Distance
+//int moXInitDistance = 2* stepsPerRevX;  // Motor X Initialization Distance
 // Crane Rot Motor
 int moYSpeed = 400;                     // Motor X Base Speed 
 int moYMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moYAccel = 20000;                   // Motor X Acceleration
 int moYDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-int moYInitDistance = 1* stepsPerRevY;  // Motor X Initialization Distance
+//int moYInitDistance = 1* stepsPerRevY;  // Motor X Initialization Distance
 // Transport System 1 Motors
 int reverseTimeZ = 50;
 
@@ -80,9 +80,9 @@ AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
 Elego_Stepper stepperZ(stepPinZ, driverZReset);   // Transport System 1 Motor
 
 //intialize the Buttons as ojects
-Button bStart(button1);  // Button Start
-Button bPause(button2);  // Button Pause
-Button bStop(button3);   // Button Stop
+//Button bStart(button1);  // Button Start
+//Button bPause(button2);  // Button Pause
+//Button bStop(button3);   // Button Stop
 
 // General Variables
 int mode = 0;                     // Current SFC Mode State
@@ -102,6 +102,8 @@ const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
 
+bool paused = false;              // Pause Mode Variable
+
 //HardwareSerial Serial1(PA10, PA9);
 
 void setup() 
@@ -114,15 +116,18 @@ void setup()
   lcd.print("Hello");
   
   // Initialize Inputs
-  pinMode(limitX, INPUT);
-  pinMode(limitY, INPUT);
-  pinMode(limitZ, INPUT);
+  pinMode(limitX, INPUT_PULLUP);
+  pinMode(limitY, INPUT_PULLUP);
+  //pinMode(limitZ, INPUT_PULLUP);
   pinMode(photoRes, INPUT);
   
   // Initialize Buttons
-  bStart.begin();
-  bPause.begin();
-  bStop.begin();
+  pinMode(button1, INPUT);
+  pinMode(button2, INPUT_PULLUP);
+  pinMode(button3, INPUT_PULLUP);
+  //bStart.begin();
+  //bPause.begin();
+  //bStop.begin();
  
   //Initialize Outputs  
   pinMode(ledGreen, OUTPUT);
@@ -153,6 +158,8 @@ void setup()
   lcd.setCursor(1,0);
   lcd.print("press Start");
 
+  attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
+  attachInterrupt(digitalPinToInterrupt(button3), stop, RISING);
 }
 
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
@@ -224,7 +231,7 @@ void loop()
   //Serial.println("Mode:");
   //Serial.println(mode);
     // Mode Switch Logic and Mode Logic that has to happen once
-  if (digitalRead(button1) && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
+  if (digitalRead(button1) && mode == 0 && !paused)                      //Mode 1 Safe to Start, Requirement: Button Start
   {
     Serial.println("Is System Safe to Start?");
     
@@ -240,12 +247,16 @@ void loop()
     stepperZ.reset();
     mode = mode + 1;
   }
-  else if (!digitalRead(limitX) && !digitalRead(limitY) && !digitalRead(limitZ) && digitalRead(button1) && mode == 1 || mode == 12)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
+  else if ((!digitalRead(limitX) && !digitalRead(limitY) && !digitalRead(limitZ) && digitalRead(button1) && mode == 1 || mode == 12) && !paused)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
   {  
     Serial.println("Begin Light Barrier Calibration:");
+    
+    attachInterrupt(digitalPinToInterrupt(limitX), pause, RISING);
+    attachInterrupt(digitalPinToInterrupt(limitY), pause, RISING);
+    
     mode = 2;
   }
-  else if (calibrated && mode == 2)   //Mode 3 Divide Goods, Requirement: Ligth Barrier calibrated
+  else if (calibrated && mode == 2 && !paused)   //Mode 3 Divide Goods, Requirement: Ligth Barrier calibrated
   {
     stepperX.disableOutputs();
     Serial.println("Start of Box filling");
@@ -254,35 +265,42 @@ void loop()
     stepperZ.start();
     mode = mode + 1;
   }
-  else if (countVar >= countMax && mode == 3)   //Mode 4 Roation Ref, Requirement: countVar >= countMax
+  else if (countVar >= countMax && mode == 3 && !paused)   //Mode 4 Roation Ref, Requirement: countVar >= countMax
   {
     //stepperZ.stop(reverseTimeZ);
     stepperZ.reset();
 
     stepperY.setSpeed(-moYDirection*moYSpeed);
 
+    detachInterrupt(digitalPinToInterrupt(limitY));
+
     countVar = 0;
     mode = mode + 1;
   }
-  else if (digitalRead(limitY) && mode == 4)   //Mode 5 Lift Ref, Requirement: Limit Switch Rot reached
+  else if (digitalRead(limitY) && mode == 4 && !paused)   //Mode 5 Lift Ref, Requirement: Limit Switch Rot reached
   {
     stepperY.setSpeed(0);
     stepperY.setCurrentPosition(0);
 
     stepperX.setSpeed(-moXDirection*moXSpeed);
     
+    attachInterrupt(digitalPinToInterrupt(limitY), pause, RISING);
+    detachInterrupt(digitalPinToInterrupt(limitX));
+    
     mode = mode + 1;
   }
-  else if (digitalRead(limitX) && mode == 5)     //Mode 6 Move to phiPos1, Requirement: Limit Switch Lift reached
+  else if (digitalRead(limitX) && mode == 5 && !paused)     //Mode 6 Move to phiPos1, Requirement: Limit Switch Lift reached
   {
     stepperX.setSpeed(0);
     stepperX.setCurrentPosition(0);
 
     stepperY.setSpeed(moYDirection*moYSpeed);
 
+    attachInterrupt(digitalPinToInterrupt(limitX), pause, RISING);
+
     mode = mode + 1;
   }
-  else if (abs(stepperY.currentPosition()) >= phiPos1 && mode == 6)     //Mode 7 Move to xPos1, Requirement: Rotation Position 1 reached
+  else if (abs(stepperY.currentPosition()) >= phiPos1 && mode == 6 && !paused)     //Mode 7 Move to xPos1, Requirement: Rotation Position 1 reached
   {
     stepperY.setSpeed(0);
 
@@ -290,7 +308,7 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (abs(stepperX.currentPosition()) >= xPos1 && mode == 7)     //Mode 8 Move to phiPo2, Requirement: Lift Position 1 reached
+  else if (abs(stepperX.currentPosition()) >= xPos1 && mode == 7 && !paused)     //Mode 8 Move to phiPo2, Requirement: Lift Position 1 reached
   {
     stepperX.setSpeed(0);
 
@@ -298,7 +316,7 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (abs(stepperY.currentPosition()) >= phiPos2 && mode == 8)     //Mode 9 Move to xPos2, Requirement: Rotation Position 2 reached
+  else if (abs(stepperY.currentPosition()) >= phiPos2 && mode == 8 && !paused)     //Mode 9 Move to xPos2, Requirement: Rotation Position 2 reached
   {
     stepperY.setSpeed(0);
 
@@ -306,7 +324,7 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (abs(stepperX.currentPosition()) <= xPos2 && mode == 9)     //Mode 10 Move to xPos2, Requirement: Lift Position 2 reached
+  else if (abs(stepperX.currentPosition()) <= xPos2 && mode == 9 && !paused)     //Mode 10 Move to xPos2, Requirement: Lift Position 2 reached
   {
     stepperX.setSpeed(0);
     countBox = countBox + 1;
@@ -327,21 +345,26 @@ void loop()
     }
   }
   
-  stepperX.runSpeed();
-  stepperY.runSpeed();
-  
+  if (!paused){
+    stepperX.runSpeed();
+    stepperY.runSpeed();
+  }
+  else if (paused && digitalRead(button1)){
+    paused = false;
+    stepperX.disableOutputs();
+  }
 
   if (digitalRead(button2)){
     stepperZ.reset();
   }
  
   // Mode Logic that has to be run each cycle
-  if (mode == 2){
+  if (mode == 2 && !paused){
     barrierValue = analogRead(photoRes);
     Serial.println(barrierValue);
     calibrate_photoresistor();           // call of calibration algorithm
   }
-  else if (mode == 3 ){    
+  else if (mode == 3 && !paused){    
     barrierValue = analogRead(photoRes);   // current light barrier sensor value
     count_goods();                              // counter logic checks if light barrier detects goods  
     Serial.println(countVar);
@@ -354,4 +377,22 @@ void loop()
     lcd.print("actual goods: ");
     lcd.print(countVar, 1); 
   }
+}
+
+void pause(){
+  stepperX.enableOutputs();
+  paused = true;
+}
+
+void stop(){
+  stepperX.setSpeed(0);
+  stepperX.runSpeed();
+  stepperY.setSpeed(0);
+  stepperY.runSpeed();
+  stepperZ.reset();
+  stepperX.enableOutputs();
+  calibrated = false;
+  idx = 0;
+  threshold = 0;
+  mode = 0;
 }
