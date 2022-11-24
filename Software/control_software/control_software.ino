@@ -198,7 +198,7 @@ void LED(int LED_mode)
   }
 }
 
-void counter()      // If the barrier sensor value falls below the threshold an item is counted.
+void count_goods()      // If the barrier sensor value falls below the threshold an item is counted.
 {   
   if (barrierValue < threshold){        
     countState = HIGH;
@@ -343,7 +343,7 @@ void loop()
   }
   else if (mode == 3 ){    
     barrierValue = analogRead(photoRes);   // current light barrier sensor value
-    counter();                              // counter logic checks if light barrier detects goods  
+    count_goods();                              // counter logic checks if light barrier detects goods  
     Serial.println(countVar);
     Serial.println(barrierValue);
     
