@@ -102,6 +102,10 @@ const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
 
+bool limitXState;
+bool limitYState;
+//bool limitZState;
+
 //HardwareSerial Serial1(PA10, PA9);
 
 void setup() 
@@ -114,10 +118,15 @@ void setup()
   lcd.print("Hello");
   
   // Initialize Inputs
-  pinMode(limitX, INPUT);
-  pinMode(limitY, INPUT);
-  pinMode(limitZ, INPUT);
+  pinMode(limitX, INPUT_PULLUP);
+  pinMode(limitY, INPUT_PULLUP);
+  //pinMode(limitZ, INPUT);
   pinMode(photoRes, INPUT);
+  //pinMode(button1, INPUT_PULLUP);
+  //pinMode(button2, INPUT_PULLUP);
+  //pinMode(button3, INPUT_PULLUP);
+
+  
   
   // Initialize Buttons
   bStart.begin();
@@ -220,11 +229,12 @@ void count_goods()      // If the barrier sensor value falls below the threshold
 }
 
 void loop()
-{  
-  //Serial.println("Mode:");
-  //Serial.println(mode);
-    // Mode Switch Logic and Mode Logic that has to happen once
-  if (digitalRead(button1) && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
+{      
+  limitXState = digitalRead(limitX);
+  limitYState = digitalRead(limitY);
+
+  // Mode Switch Logic and Mode Logic that has to happen once
+  if (bStart.pressed() && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
   {
     Serial.println("Is System Safe to Start?");
     
@@ -234,13 +244,13 @@ void loop()
     lcd.setCursor(1,0);
     lcd.print(mode, 1);
     calibrated = false;
-    delay(1000);
+    delay(200);
 
     LED(2);
     stepperZ.reset();
     mode = mode + 1;
   }
-  else if (!digitalRead(limitX) && !digitalRead(limitY) && !digitalRead(limitZ) && digitalRead(button1) && mode == 1 || mode == 12)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
+  else if ((!limitXState && !limitYState && bStart.pressed() && mode == 1) || mode == 12)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
   {  
     Serial.println("Begin Light Barrier Calibration:");
     mode = 2;
@@ -264,7 +274,7 @@ void loop()
     countVar = 0;
     mode = mode + 1;
   }
-  else if (digitalRead(limitY) && mode == 4)   //Mode 5 Lift Ref, Requirement: Limit Switch Rot reached
+  else if (limitYState && mode == 4)   //Mode 5 Lift Ref, Requirement: Limit Switch Rot reached
   {
     stepperY.setSpeed(0);
     stepperY.setCurrentPosition(0);
@@ -273,7 +283,7 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (digitalRead(limitX) && mode == 5)     //Mode 6 Move to phiPos1, Requirement: Limit Switch Lift reached
+  else if (limitXState && mode == 5)     //Mode 6 Move to phiPos1, Requirement: Limit Switch Lift reached
   {
     stepperX.setSpeed(0);
     stepperX.setCurrentPosition(0);
@@ -330,11 +340,6 @@ void loop()
   stepperX.runSpeed();
   stepperY.runSpeed();
   
-
-  if (digitalRead(button2)){
-    stepperZ.reset();
-  }
- 
   // Mode Logic that has to be run each cycle
   if (mode == 2){
     barrierValue = analogRead(photoRes);
