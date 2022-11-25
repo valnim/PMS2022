@@ -102,9 +102,10 @@ const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
 
-bool limitXState;
-bool limitYState;
-//bool limitZState;
+bool limitXState = false;
+bool limitYState = false;
+//bool limitZState = false;
+bool bStartState = false;
 
 //HardwareSerial Serial1(PA10, PA9);
 
@@ -232,9 +233,10 @@ void loop()
 {      
   limitXState = digitalRead(limitX);
   limitYState = digitalRead(limitY);
+  bStartState = bStart.pressed();
 
   // Mode Switch Logic and Mode Logic that has to happen once
-  if (bStart.pressed() && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
+  if (bStartState && mode == 0)                      //Mode 1 Safe to Start, Requirement: Button Start
   {
     Serial.println("Is System Safe to Start?");
     
@@ -247,10 +249,9 @@ void loop()
     delay(200);
 
     LED(2);
-    stepperZ.reset();
     mode = mode + 1;
   }
-  else if ((!limitXState && !limitYState && bStart.pressed() && mode == 1) || mode == 12)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
+  else if ((!limitXState && !limitYState && bStartState && mode == 1) || mode == 12)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
   {  
     Serial.println("Begin Light Barrier Calibration:");
     mode = 2;
@@ -339,6 +340,10 @@ void loop()
   
   stepperX.runSpeed();
   stepperY.runSpeed();
+
+  if (bPause.pressed()){
+    stepperZ.reset();
+  }
   
   // Mode Logic that has to be run each cycle
   if (mode == 2){
