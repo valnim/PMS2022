@@ -5,8 +5,8 @@
 
 // Buttons
 #define button1 PA12  //Button Start / System is Safe to Start
-#define button2 PA11  //Button Pause            // Move to Interrupt able PIN !!!
-#define button3 PB12  //Button Emergency Stop   // Move to Interrupt able PIN !!!
+#define button2 PA11  //Button Pause            
+#define button3 PB12  //Button Emergency Stop
 
 // Indicator Leds
 #define ledGreen PC8  //Green LED
@@ -19,18 +19,17 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 // Counter System Components
 #define photoRes PC4     // Photo Resistor Pin
-//#define laserDiode PB1   // Optional Laser Diode Pin Currently Always ON
 
 // CNC Shield Pins
 // Stepper X: Crane Lift Axis
 #define stepPinX 2
 #define dirPinX 5
-#define limitX 9      // Move to Interrupt able PIN !!!
+#define limitX 9
 
 //Stepper Y: Crane Rot/Phi Axis 
 #define stepPinY 3
 #define dirPinY 6
-#define limitY 10     // Move to Interrupt able PIN !!!
+#define limitY 10
 
 //Stepper Z: Elego Direct Current Motors, Linked to Pins 1 & 4 (Black & Blue)
 #define stepPinZ 4
@@ -57,13 +56,13 @@ int moXSpeed = 400;                     // Motor X Base Speed
 int moXMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moXAccel = 20000;                   // Motor X Acceleration
 int moXDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-//int moXInitDistance = 2* stepsPerRevX;  // Motor X Initialization Distance
+
 // Crane Rot Motor
 int moYSpeed = 400;                     // Motor X Base Speed 
 int moYMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moYAccel = 20000;                   // Motor X Acceleration
 int moYDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
-//int moYInitDistance = 1* stepsPerRevY;  // Motor X Initialization Distance
+
 // Transport System 1 Motors
 int reverseTimeZ = 50;
 
@@ -80,9 +79,7 @@ AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
 Elego_Stepper stepperZ(stepPinZ, driverZReset);   // Transport System 1 Motor
 
 //intialize the Buttons as ojects
-//Button bStart(button1);  // Button Start
-//Button bPause(button2);  // Button Pause
-//Button bStop(button3);   // Button Stop
+Button bStart(button1);  // Button Start
 
 // General Variables
 int mode = 0;                     // Current SFC Mode State
@@ -102,15 +99,10 @@ const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
 
-
-bool limitXState = false;
-bool limitYState = false;
-//bool limitZState = false;
-bool bStartState = false;
+bool limitXState = false;         // Limit Switch X State Variable
+bool limitYState = false;         // Limit Switch Y State Variable
+bool bStartState = false;         // Start Button State Variable, Only true in the cylce the button is pressed
 bool paused = false;              // Pause Mode Variable
-
-
-//HardwareSerial Serial1(PA10, PA9);
 
 void setup() 
 { 
@@ -124,28 +116,19 @@ void setup()
   // Initialize Inputs
   pinMode(limitX, INPUT_PULLUP);
   pinMode(limitY, INPUT_PULLUP);
-  //pinMode(limitZ, INPUT);
 
   pinMode(photoRes, INPUT);
-  //pinMode(button1, INPUT_PULLUP);
-  //pinMode(button2, INPUT_PULLUP);
-  //pinMode(button3, INPUT_PULLUP);
-
   
-  
-  // Initialize Buttons
-  pinMode(button1, INPUT);
   pinMode(button2, INPUT_PULLUP);
   pinMode(button3, INPUT_PULLUP);
-  //bStart.begin();
-  //bPause.begin();
-  //bStop.begin();
+  
+  // Initialize Buttons
+  bStart.begin();
  
   //Initialize Outputs  
   pinMode(ledGreen, OUTPUT);
   pinMode(ledYellow, OUTPUT);
   pinMode(ledRed, OUTPUT);
-  //pinMode(laserDiode, OUTPUT);
   pinMode(stepperEnable, OUTPUT);
   pinMode(driverZReset, OUTPUT);
   pinMode(dirPinZ, OUTPUT);
@@ -265,8 +248,8 @@ void loop()
   {  
     Serial.println("Begin Light Barrier Calibration:");
     
-    attachInterrupt(digitalPinToInterrupt(limitX), pause, RISING);
-    attachInterrupt(digitalPinToInterrupt(limitY), pause, RISING);
+    attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
+    attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
     
     mode = 2;
   }
@@ -287,6 +270,7 @@ void loop()
     stepperY.setSpeed(-moYDirection*moYSpeed);
 
     detachInterrupt(digitalPinToInterrupt(limitY));
+    detachInterrupt(digitalPinToInterrupt(limitX));
 
     countVar = 0;
     mode = mode + 1;
@@ -298,9 +282,6 @@ void loop()
 
     stepperX.setSpeed(-moXDirection*moXSpeed);
     
-    attachInterrupt(digitalPinToInterrupt(limitY), pause, RISING);
-    detachInterrupt(digitalPinToInterrupt(limitX));
-    
     mode = mode + 1;
   }
   else if (limitXState && mode == 5 && !paused)     //Mode 6 Move to phiPos1, Requirement: Limit Switch Lift reached
@@ -310,8 +291,6 @@ void loop()
 
     stepperY.setSpeed(moYDirection*moYSpeed);
 
-    attachInterrupt(digitalPinToInterrupt(limitX), pause, RISING);
-
     mode = mode + 1;
   }
   else if (abs(stepperY.currentPosition()) >= phiPos1 && mode == 6 && !paused)     //Mode 7 Move to xPos1, Requirement: Rotation Position 1 reached
@@ -320,6 +299,9 @@ void loop()
 
     stepperX.setSpeed(moXDirection*moXSpeed);
     
+    attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
+    attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
+
     mode = mode + 1;
   }
   else if (abs(stepperX.currentPosition()) >= xPos1 && mode == 7 && !paused)     //Mode 8 Move to phiPo2, Requirement: Lift Position 1 reached
@@ -365,7 +347,9 @@ void loop()
   }
   else if (paused && bStartState){
     paused = false;
-    stepperX.disableOutputs();
+    if (mode > 2){
+      stepperX.disableOutputs();
+    }
   }
   
   // Mode Logic that has to be run each cycle
@@ -392,6 +376,7 @@ void loop()
 void pause(){
   stepperX.enableOutputs();
   paused = true;
+  Serial.println("Pause");
 }
 
 void stop(){
@@ -405,4 +390,5 @@ void stop(){
   idx = 0;
   threshold = 0;
   mode = 0;
+  Serial.println("Stopp");
 }
