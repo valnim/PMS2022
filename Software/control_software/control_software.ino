@@ -251,7 +251,7 @@ void loop()
     LED(2);
     mode = mode + 1;
   }
-  else if ((!limitXState && !limitYState && bStartState && mode == 1) || mode == 12)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
+  else if ((!limitXState && !limitYState && bStartState && mode == 1) || mode == 10)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
   {  
     Serial.println("Begin Light Barrier Calibration:");
     mode = 2;
