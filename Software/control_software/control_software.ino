@@ -325,6 +325,7 @@ void loop()
     idx = 0;
     threshold = 0;
     stepperZ.reset();
+    stepperX.enableOutputs();    // Disables All Steppers
 
     if (countBox < countBoxMax){
       Serial.println("Box delivered");
@@ -333,7 +334,6 @@ void loop()
     else{
       mode = 0;
       countBox = 0;
-      stepperX.enableOutputs();    // Disables All Steppers
       Serial.println("Last Box delivered");
     }
   }
