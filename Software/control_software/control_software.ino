@@ -153,8 +153,8 @@ void setup()
   lcd.setCursor(1,0);
   lcd.print("press Start");
 
-  //attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
-  //attachInterrupt(digitalPinToInterrupt(button3), stop, RISING);
+  attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
+  attachInterrupt(digitalPinToInterrupt(button3), stop, RISING);
 }
 
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
