@@ -248,8 +248,8 @@ void loop()
   {  
     Serial.println("Begin Light Barrier Calibration:");
     
-    attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
-    attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
+    //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
+    //attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
     
     mode = 2;
   }
@@ -269,8 +269,8 @@ void loop()
 
     stepperY.setSpeed(-moYDirection*moYSpeed);
 
-    detachInterrupt(digitalPinToInterrupt(limitY));
-    detachInterrupt(digitalPinToInterrupt(limitX));
+    //detachInterrupt(digitalPinToInterrupt(limitY));
+    //detachInterrupt(digitalPinToInterrupt(limitX));
 
     countVar = 0;
     mode = mode + 1;
@@ -299,8 +299,8 @@ void loop()
 
     stepperX.setSpeed(moXDirection*moXSpeed);
     
-    attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
-    attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
+    //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
+    //attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
 
     mode = mode + 1;
   }
