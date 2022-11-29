@@ -1,7 +1,6 @@
 #include <AccelStepper.h>
 #include <LiquidCrystal.h>
 #include <Button.h>
-#include <Elego_Stepper.h>
 
 // Buttons
 #define button1 PA12  //Button Start / System is Safe to Start
@@ -43,12 +42,10 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 //Enable Outputs of all Stepper Drivers
 #define stepperEnable 8     
 
-//Reset Pin of Stepper Drivers
-#define driverZReset PC9    // Resets Stepper Driver Z
-
 //Steps Per Revolution of Steppers
 #define stepsPerRevX 200
 #define stepsPerRevY 200
+#define stepsPerRevZ 200
 
 // Motor variables
 // Crane Lift Motor
@@ -64,7 +61,10 @@ int moYAccel = 20000;                   // Motor X Acceleration
 int moYDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
 
 // Transport System 1 Motors
-int reverseTimeZ = 50;
+int moZSpeed = 400;                     // Motor X Base Speed 
+int moZMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
+int moZAccel = 20000;                   // Motor X Acceleration
+int moZDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
 
 // Stepper Motor Positions
 const int phiPos1 = stepsPerRevY*1;   // Position 1 for Motor 2 in Phi-Axis
@@ -75,8 +75,7 @@ const int xPos2 = stepsPerRevX*1;    // Position 2 for Motor 1 in Z-Axis
 //initialize the stepper motors as existing objects
 AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
 AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
-//initialize the elego motor as existing object
-Elego_Stepper stepperZ(stepPinZ, driverZReset);   // Transport System 1 Motor
+AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Transport System 1 Motors
 
 //intialize the Buttons as ojects
 Button bStart(button1);  // Button Start
@@ -85,12 +84,12 @@ Button bStart(button1);  // Button Start
 int mode = 0;                     // Current SFC Mode State
 
 //Counter
-int countVar = 0;                // Counter Variable for balls in a Box
-int countMax = 5;               // Max goods count in Transport Box
-int countState = 0;              // Button Count Default State
-int countLastState = 0;          // Button Count Last State
-int countBox = 0;                // Counter Variable for filled Boxes
-const int countBoxMax = 2;		   // Boxes to be filled
+int countVar = 0;                 // Counter Variable for balls in a Box
+int countMax = 5;                 // Max goods count in Transport Box
+int countState = 0;               // Button Count Default State
+int countLastState = 0;           // Button Count Last State
+int countBox = 0;                 // Counter Variable for filled Boxes
+const int countBoxMax = 2;		    // Boxes to be filled
 
 bool calibrated = false;          // Light barrier calibration status
 int threshold = 0;                // Light barrier threshold
@@ -130,8 +129,6 @@ void setup()
   pinMode(ledYellow, OUTPUT);
   pinMode(ledRed, OUTPUT);
   pinMode(stepperEnable, OUTPUT);
-  pinMode(driverZReset, OUTPUT);
-  pinMode(dirPinZ, OUTPUT);
   
   stepperX.setEnablePin(stepperEnable);
 
@@ -139,10 +136,13 @@ void setup()
   stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
   stepperX.setSpeed(0);
 
-  stepperY.setAcceleration(moXAccel);
-  stepperY.setMaxSpeed(moYDirection*moXSpeed*2);
+  stepperY.setAcceleration(moYAccel);
+  stepperY.setMaxSpeed(moYDirection*moYSpeed*2);
   stepperY.setSpeed(0);
 
+  stepperZ.setAcceleration(moZAccel);
+  stepperZ.setMaxSpeed(moZDirection*moZSpeed*2);
+  stepperZ.setSpeed(0);
   
   Serial.println("Setup Finished");
   
@@ -153,8 +153,8 @@ void setup()
   lcd.setCursor(1,0);
   lcd.print("press Start");
 
-  attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
-  attachInterrupt(digitalPinToInterrupt(button3), stop, RISING);
+  //attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
+  //attachInterrupt(digitalPinToInterrupt(button3), stop, RISING);
 }
 
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
@@ -258,14 +258,12 @@ void loop()
     stepperX.disableOutputs();
     Serial.println("Start of Box filling");
     LED(3);
-    stepperZ.reset();
-    stepperZ.start();
+    stepperZ.setSpeed(moZDirection*moZSpeed);
     mode = mode + 1;
   }
   else if (countVar >= countMax && mode == 3 && !paused)   //Mode 4 Roation Ref, Requirement: countVar >= countMax
   {
-    //stepperZ.stop(reverseTimeZ);
-    stepperZ.reset();
+    stepperZ.setSpeed(0);
 
     stepperY.setSpeed(-moYDirection*moYSpeed);
 
@@ -327,7 +325,6 @@ void loop()
     calibrated = false;
     idx = 0;
     threshold = 0;
-    stepperZ.reset();
     stepperX.enableOutputs();    // Disables All Steppers
 
     if (countBox < countBoxMax){
@@ -344,6 +341,7 @@ void loop()
   if (!paused){
     stepperX.runSpeed();
     stepperY.runSpeed();
+    stepperZ.runSpeed();
   }
   else if (paused && bStartState){
     paused = false;
@@ -384,7 +382,8 @@ void stop(){
   stepperX.runSpeed();
   stepperY.setSpeed(0);
   stepperY.runSpeed();
-  stepperZ.reset();
+  stepperZ.setSpeed(0);
+  stepperZ.runSpeed();
   stepperX.enableOutputs();
   calibrated = false;
   idx = 0;
