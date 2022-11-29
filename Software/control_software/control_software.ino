@@ -215,6 +215,7 @@ void count_goods()      // If the barrier sensor value falls below the threshold
     {
       // if the current state is HIGH then the button went from off to on:
       countVar++;
+      Serial.println(countVar);
     }
   }
   // save the current state as the last state, for next time through the loop
@@ -358,16 +359,7 @@ void loop()
   }
   else if (mode == 3 && !paused){    
     barrierValue = analogRead(photoRes);   // current light barrier sensor value
-    count_goods();                              // counter logic checks if light barrier detects goods  
-    Serial.println(countVar);
-    Serial.println(barrierValue);
-    
-    lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
-    lcd.print("Modus: ");
-    lcd.print(mode, 1);
-    lcd.setCursor(0,2);
-    lcd.print("actual goods: ");
-    lcd.print(countVar, 1); 
+    count_goods();                         // counter logic checks if light barrier detects goods  
   }
 }
 
