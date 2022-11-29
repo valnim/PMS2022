@@ -94,7 +94,7 @@ const int countBoxMax = 2;		   // Boxes to be filled
 
 bool calibrated = false;          // Light barrier calibration status
 int threshold = 0;                // Light barrier threshold
-const int thresholdOffset = 50;  // Threshold offset, the lower the offset the higher the sensitivity
+const int thresholdOffset = 130;  // Threshold offset, the lower the offset the higher the sensitivity
 const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
