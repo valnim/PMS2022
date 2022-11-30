@@ -14,6 +14,7 @@
 
 //Define LCD pins
 const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5; 
+
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
 
 // Counter System Components
@@ -149,7 +150,7 @@ void setup()
 
   lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
   lcd.print("Setup finished");
-  lcd.setCursor(1,0);
+  lcd.setCursor(0,1);
   lcd.print("press Start");
 
   attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
@@ -241,6 +242,7 @@ void loop()
     Serial.println("Is System Safe to Start?");
     
     // TODO Implement Display on LCD and LED handling
+    lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Is System safe?");
     lcd.setCursor(1,0);
