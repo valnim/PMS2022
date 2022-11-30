@@ -131,8 +131,6 @@ void setup()
   pinMode(stepperEnable, OUTPUT);
   
   stepperX.setEnablePin(stepperEnable);
-  //stepperY.setEnablePin(stepperEnable);
-  //stepperZ.setEnablePin(stepperEnable);
 
   stepperX.setAcceleration(moXAccel);
   stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
@@ -161,7 +159,7 @@ void setup()
 
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
 {
-  //Serial.println(barrierValue);
+  Serial.println(barrierValue);
   threshold = threshold + barrierValue;
   idx = idx + 1;
   if (idx >= numCalibrate){
@@ -219,6 +217,13 @@ void count_goods()      // If the barrier sensor value falls below the threshold
       countVar++;
       Serial.print("Boxlevel: ");
       Serial.println(countVar);
+
+      lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
+      lcd.print("Modus: ");
+      lcd.print(mode, 1);
+      lcd.setCursor(0,2);
+      lcd.print("actual goods: ");
+      lcd.print(countVar, 1);  
     }
   }
   // save the current state as the last state, for next time through the loop
@@ -233,7 +238,6 @@ void loop()
 
   // Mode Switch Logic and Mode Logic that has to happen once
   if (bStartState && mode == 0 && !paused)                      //Mode 1 Safe to Start, Requirement: Button Start
-
   {
     Serial.println("Is System Safe to Start?");
     
@@ -262,7 +266,7 @@ void loop()
     stepperX.disableOutputs();
     Serial.println("Start of Box filling");
     LED(3);
-    stepperZ.setSpeed(400);
+    stepperZ.setSpeed(moZDirection*moZSpeed);
     mode = mode + 1;
   }
   else if (countVar >= countMax && mode == 3 && !paused)   //Mode 4 Roation Ref, Requirement: countVar >= countMax
@@ -361,21 +365,11 @@ void loop()
   // Mode Logic that has to be run each cycle
   if (mode == 2 && !paused){
     barrierValue = analogRead(photoRes);
-    //Serial.println(barrierValue);
     calibrate_photoresistor();           // call of calibration algorithm
   }
   else if (mode == 3 && !paused){    
     barrierValue = analogRead(photoRes);   // current light barrier sensor value
     count_goods();                         // counter logic checks if light barrier detects goods 
-    //Serial.println(countVar);
-    //Serial.println(barrierValue);
-    
-    lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
-    lcd.print("Modus: ");
-    lcd.print(mode, 1);
-    lcd.setCursor(0,2);
-    lcd.print("actual goods: ");
-    lcd.print(countVar, 1);  
   }
 }
 
