@@ -13,8 +13,8 @@
 #define ledRed PC5    //Red LED
 
 //Define LCD pins
-const int rs = PB7, en = PC13, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1; 
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
+const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5; 
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 // Counter System Components
 #define photoRes PC4     // Photo Resistor Pin
@@ -110,7 +110,6 @@ void setup()
   
   //Initialize LCD
   lcd.begin(16,2);
-  lcd.print("Hello");
   
   // Initialize Inputs
   pinMode(limitX, INPUT_PULLUP);
@@ -150,7 +149,7 @@ void setup()
 
   lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
   lcd.print("Setup finished");
-  lcd.setCursor(1,0);
+  lcd.setCursor(0,1);
   lcd.print("press Start");
 
   attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
@@ -242,6 +241,7 @@ void loop()
     Serial.println("Is System Safe to Start?");
     
     // TODO Implement Display on LCD and LED handling
+    lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Is System safe?");
     lcd.setCursor(1,0);
