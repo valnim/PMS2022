@@ -13,7 +13,7 @@
 #define ledRed PC5    //Red LED
 
 //Define LCD pins
-const int rs = PB7, en = PC13, d4 = PC14, d5 = PC15, d6 = PF0, d7 = PF1; 
+const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5; 
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
 
 // Counter System Components
@@ -31,13 +31,13 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 #define limitY 10
 
 //Stepper Z: Transpor System 1/conveyor belt Axis
-#define stepPinZ 4
+#define stepPinZ PF4    // alt 4
 #define dirPinZ 7
 #define limitZ 11
 
 // define Shield Pins for Spindle-Axis A (using pins D12 and D13) not used currently
-//#define stepPinA 12
-//#define dirPinA 13
+#define stepPinA 12
+#define dirPinA 13
 
 //Enable Outputs of all Stepper Drivers
 #define stepperEnable 8     
@@ -93,7 +93,7 @@ const int countBoxMax = 3;		    // Boxes to be filled
 
 bool calibrated = false;          // Light barrier calibration status
 int threshold = 0;                // Light barrier threshold
-const int thresholdOffset = 100;  // Threshold offset, the lower the offset the higher the sensitivity
+const int thresholdOffset = 140;  // Threshold offset, the lower the offset the higher the sensitivity
 const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
@@ -110,7 +110,6 @@ void setup()
   
   //Initialize LCD
   lcd.begin(16,2);
-  lcd.print("Hello");
   
   // Initialize Inputs
   pinMode(limitX, INPUT_PULLUP);
