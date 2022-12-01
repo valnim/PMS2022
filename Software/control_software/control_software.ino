@@ -115,9 +115,7 @@ void setup()
   // Initialize Inputs
   pinMode(limitX, INPUT_PULLUP);
   pinMode(limitY, INPUT_PULLUP);
-
   pinMode(photoRes, INPUT);
-  
   pinMode(button2, INPUT_PULLUP);
   pinMode(button3, INPUT_PULLUP);
   
@@ -130,19 +128,20 @@ void setup()
   pinMode(ledRed, OUTPUT);
   pinMode(stepperEnable, OUTPUT);
   
-  stepperX.setEnablePin(stepperEnable);
+  //Initialize Motor Parameters
+  stepperX.setEnablePin(stepperEnable);             //Enable Pin for ALL Steppers
 
-  stepperX.setAcceleration(moXAccel);
-  stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
-  stepperX.setSpeed(0);
+  stepperX.setAcceleration(moXAccel);               //Set Acceleration for Motor X
+  stepperX.setMaxSpeed(moXDirection*moXSpeed*2);    //Set Max Speed for Motor X
+  stepperX.setSpeed(0);                             //Set Motor Speed for init mode Motor X
 
-  stepperY.setAcceleration(moYAccel);
-  stepperY.setMaxSpeed(moYDirection*moYSpeed*2);
-  stepperY.setSpeed(0);
+  stepperY.setAcceleration(moYAccel);               //Set Acceleration for Motor Y
+  stepperY.setMaxSpeed(moYDirection*moYSpeed*2);    //Set Max Speed for Motor Y
+  stepperY.setSpeed(0);                             //Set Motor Speed for init mode Motor Y
 
-  stepperZ.setAcceleration(moZAccel);
-  stepperZ.setMaxSpeed(moZDirection*moZSpeed*2);
-  stepperZ.setSpeed(0);
+  stepperZ.setAcceleration(moZAccel);               //Set Acceleration for Motor Z
+  stepperZ.setMaxSpeed(moZDirection*moZSpeed*2);    //Set Max Speed for Motor Z
+  stepperZ.setSpeed(0);                             //Set Motor Speed for init mode Motor Z
   
   Serial.println("Setup Finished");
   
@@ -153,12 +152,18 @@ void setup()
   lcd.setCursor(0,1);
   lcd.print("press Start");
 
+  //Attach Interrupts for Pause and Stop Handling
   attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
   attachInterrupt(digitalPinToInterrupt(button3), stop, RISING);
 }
 
 void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
 {
+  // calibrate_photoresistor calibrates the light barrier 
+  // by calculating an threshold, which is required to trigger the barrier.
+  // The threshold is the arethmetic medium of numCalibrate measurements 
+  // with an offset defined by thresholdOffset
+  // Sets calibrated = true after numCalibrate calls
   Serial.println(barrierValue);
   threshold = threshold + barrierValue;
   idx = idx + 1;
@@ -177,6 +182,7 @@ void calibrate_photoresistor()    // Before each counting cycle the light barrie
 
 void LED(int LED_mode)
 {
+  // The function LED sets the leds depending on the LED_mode Parameter
   if (LED_mode == 1)
   {
     digitalWrite(ledRed, HIGH);  
@@ -205,6 +211,7 @@ void LED(int LED_mode)
 
 void count_goods()      // If the barrier sensor value falls below the threshold an item is counted.
 {   
+  // count_goods Handles the goods detection while doing edge detection
   if (barrierValue < threshold){        
     countState = HIGH;
   }
@@ -410,6 +417,10 @@ void loop()
 }
 
 void pause(){
+  // Interrupt Event for pausing the system
+  // Stops all motors
+  // Saves all Variables and current modi
+  // Can be reset with Button Start
   stepperX.enableOutputs();
   paused = true;
   Serial.println("Pause");
@@ -422,6 +433,10 @@ void pause(){
 }
 
 void stop(){
+  // Interrupt Event for stopping the system
+  // Stops all motors
+  // Resets all Variables and current modi
+  // Sets system into the init modus
   stepperX.setSpeed(0);
   stepperX.runSpeed();
   stepperY.setSpeed(0);
