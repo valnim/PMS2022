@@ -148,7 +148,7 @@ void setup()
   
   LED(1);
 
-  lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
+  lcd.setCursor(0,0);
   lcd.print("Setup finished");
   lcd.setCursor(0,1);
   lcd.print("press Start");
@@ -166,6 +166,9 @@ void calibrate_photoresistor()    // Before each counting cycle the light barrie
     threshold = threshold / numCalibrate;
     Serial.println("Sensor calbirated");
     Serial.println(threshold);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Sensor Calibrated");
     threshold = threshold - thresholdOffset;
     calibrated = true; 
   }
@@ -218,7 +221,8 @@ void count_goods()      // If the barrier sensor value falls below the threshold
       Serial.print("Boxlevel: ");
       Serial.println(countVar);
 
-      lcd.setCursor(0,0);     //example of LCD-output (in this case only mode)
+      lcd.clear();
+      lcd.setCursor(0,0);
       lcd.print("Modus: ");
       lcd.print(mode, 1);
       lcd.setCursor(0,2);
@@ -240,8 +244,6 @@ void loop()
   if (bStartState && mode == 0 && !paused)                      //Mode 1 Safe to Start, Requirement: Button Start
   {
     Serial.println("Is System Safe to Start?");
-    
-    // TODO Implement Display on LCD and LED handling
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Is System safe?");
@@ -256,6 +258,11 @@ void loop()
   else if (((!limitXState && !limitYState && bStartState && mode == 1) || mode == 10) && !paused)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
   {  
     Serial.println("Begin Light Barrier Calibration:");
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Begin");
+    lcd.setCursor(1,0);
+    lcd.print("Calibration");
     
     //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
     //attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
@@ -266,6 +273,13 @@ void loop()
   {
     stepperX.disableOutputs();
     Serial.println("Start of Box filling");
+
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Start");
+    lcd.setCursor(1,0);
+    lcd.print("Box Filling");
+
     LED(3);
     stepperZ.setSpeed(moZDirection*moZSpeed);
     mode = mode + 1;
@@ -277,6 +291,12 @@ void loop()
     stepperY.setSpeed(-moYDirection*moYSpeed);
 
     Serial.println("Box filled ... delivering...");
+
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Box filled");
+    lcd.setCursor(1,0);
+    lcd.print("Start delivering");
 
     //detachInterrupt(digitalPinToInterrupt(limitY));
     //detachInterrupt(digitalPinToInterrupt(limitX));
@@ -341,12 +361,26 @@ void loop()
     if (countBox < countBoxMax){
       Serial.print("Box delivered: ");
       Serial.println(countBox);
+
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Box delivered");
+      lcd.setCursor(1,0);
+      lcd.print("Box count: ");
+      lcd.print(countBox, 1);  
       mode = 10;
     }
     else{
       mode = 0;
       countBox = 0;
       Serial.println("Last Box delivered");
+
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("All boxes");
+      lcd.setCursor(1,0);
+      lcd.print("delivered");
+
       LED(1);
     }
   }
@@ -360,17 +394,18 @@ void loop()
     paused = false;
     if (mode > 2){
       stepperX.disableOutputs();
+      lcd.clear();      
     }
   }
   
   // Mode Logic that has to be run each cycle
   if (mode == 2 && !paused){
     barrierValue = analogRead(photoRes);
-    calibrate_photoresistor();           // call of calibration algorithm
+    calibrate_photoresistor();              // call of calibration algorithm
   }
   else if (mode == 3 && !paused){    
-    barrierValue = analogRead(photoRes);   // current light barrier sensor value
-    count_goods();                         // counter logic checks if light barrier detects goods 
+    barrierValue = analogRead(photoRes);    // current light barrier sensor value
+    count_goods();                          // counter logic checks if light barrier detects goods 
   }
 }
 
@@ -378,6 +413,11 @@ void pause(){
   stepperX.enableOutputs();
   paused = true;
   Serial.println("Pause");
+
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Paused");
+
   LED(2);
 }
 
@@ -394,5 +434,10 @@ void stop(){
   threshold = 0;
   mode = 0;
   Serial.println("Stopp");
+
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Stopped");
+
   LED(1);
 }
