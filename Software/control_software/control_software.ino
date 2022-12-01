@@ -47,25 +47,32 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 #define stepsPerRevX 200
 #define stepsPerRevY 200
 #define stepsPerRevZ 200
+#define stepsPerRevA 200
 
 // Motor variables
 // Crane Lift Motor
 int moXSpeed = 1000;                    // Motor X Base Speed 
 int moXMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
 int moXAccel = 20000;                   // Motor X Acceleration
-int moXDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int moXDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
 
 // Crane Rot Motor
 int moYSpeed = 600;                     // Motor Y Base Speed 
 int moYMaxSpeedMult = 2;                // Motor Y Max Speed Multiplier
 int moYAccel = 20000;                   // Motor Y Acceleration
-int moYDirection = -1;                  // Motor Y Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int moYDirection = -1;                  // Motor Y Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
 
-// Transport System 1 Motors
+// Transport System 1 Motor 1
 int moZSpeed = 400;                     // Motor Z Base Speed 
 int moZMaxSpeedMult = 2;                // Motor Z Max Speed Multiplier
 int moZAccel = 20000;                   // Motor Z Acceleration
-int moZDirection = -1;                  // Motor Z Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise), Referencing happens in opposite direction
+int moZDirection = -1;                  // Motor Z Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
+
+// Transport System 1 Motor 2
+int moASpeed = 400;                     // Motor A Base Speed 
+int moAMaxSpeedMult = 2;                // Motor A Max Speed Multiplier
+int moAAccel = 20000;                   // Motor A Acceleration
+int moADirection = -1;                  // Motor A Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
 
 // Stepper Motor Positions
 const int phiPos1 = stepsPerRevY*2;     // Position 1 for Motor 2 in Phi-Axis
@@ -76,7 +83,8 @@ const int xPos2 = stepsPerRevX*2.5;     // Position 2 for Motor 1 in Lift-Axis
 //initialize the stepper motors as existing objects
 AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
 AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
-AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Transport System 1 Motors
+AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Transport System 1 Motors 1
+AccelStepper stepperA(1, stepPinA, dirPinA);    // Transport System 1 Motors 2
 
 //intialize the Buttons as ojects
 Button bStart(button1);  // Button Start
@@ -142,6 +150,10 @@ void setup()
   stepperZ.setAcceleration(moZAccel);               //Set Acceleration for Motor Z
   stepperZ.setMaxSpeed(moZDirection*moZSpeed*2);    //Set Max Speed for Motor Z
   stepperZ.setSpeed(0);                             //Set Motor Speed for init mode Motor Z
+
+  stepperA.setAcceleration(moAAccel);               //Set Acceleration for Motor A
+  stepperA.setMaxSpeed(moADirection*moASpeed*2);    //Set Max Speed for Motor A
+  stepperA.setSpeed(0);                             //Set Motor Speed for init mode Motor A
   
   Serial.println("Setup Finished");
   
@@ -289,11 +301,13 @@ void loop()
 
     LED(3);
     stepperZ.setSpeed(moZDirection*moZSpeed);
+    stepperA.setSpeed(moADirection*moASpeed);
     mode = mode + 1;
   }
   else if (countVar >= countMax && mode == 3 && !paused)   //Mode 4 Roation Ref, Requirement: countVar >= countMax
   {
     stepperZ.setSpeed(0);
+    stepperA.setSpeed(0);
 
     stepperY.setSpeed(-moYDirection*moYSpeed);
 
@@ -443,6 +457,8 @@ void stop(){
   stepperY.runSpeed();
   stepperZ.setSpeed(0);
   stepperZ.runSpeed();
+  stepperA.setSpeed(0);
+  stepperA.runSpeed();
   stepperX.enableOutputs();
   calibrated = false;
   idx = 0;
