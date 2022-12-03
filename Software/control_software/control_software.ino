@@ -255,25 +255,37 @@ void LED(int LED_mode)
   }
 }
 
-void count_goods()      // If the barrier sensor value falls below the threshold an item is counted.
+
+// The count_goods() function handles the detection of goods using edge detection.
+// If the barrier sensor value falls below the threshold, an item is counted.
+// The function compares the current state of the sensor to its previous state,
+// and increments the counter if the state has changed from LOW to HIGH.
+//
+// The current count value is printed to the serial console and LCD display.
+void count_goods()
 {   
-  // count_goods Handles the goods detection while doing edge detection
+  // If the barrier sensor value is below the threshold, set the count state to HIGH
   if (barrierValue < threshold){        
     countState = HIGH;
   }
+  // Otherwise, set the count state to LOW
   else{
     countState = LOW;
   }
+  
   // compare the countState to its previous state
   if (countState != countLastState) {
-    // if the state has changed, increment the counter
+    // If the state has changed, increment the counter
     if (countState == HIGH) 
     {
-      // if the current state is HIGH then the button went from off to on:
+      // If the current state is HIGH, then the sensor went from off to on
       countVar++;
+      
+      // Print the current count value to the serial console
       Serial.print("Boxlevel: ");
       Serial.println(countVar);
 
+      // Print the current count value to the LCD display
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Modus: ");
@@ -283,7 +295,7 @@ void count_goods()      // If the barrier sensor value falls below the threshold
       lcd.print(countVar, 1);  
     }
   }
-  // save the current state as the last state, for next time through the loop
+  // Save the current state as the last state, for the next iteration of the loop
   countLastState = countState;
 }
 
