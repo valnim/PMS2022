@@ -169,32 +169,57 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(button3), stop, RISING);
 }
 
-void calibrate_photoresistor()    // Before each counting cycle the light barrier is calibrated
+
+// The calibrate_photoresistor() function calibrates the light barrier
+// by calculating a threshold value that is used to determine when the barrier is triggered.
+// The threshold is calculated as the arithmetic mean of `numCalibrate` measurements,
+// with an offset defined by `thresholdOffset`.
+//
+// After `numCalibrate` calls to this function, the `calibrated` flag is set to `true`.
+void calibrate_photoresistor()
 {
-  // calibrate_photoresistor calibrates the light barrier 
-  // by calculating an threshold, which is required to trigger the barrier.
-  // The threshold is the arethmetic medium of numCalibrate measurements 
-  // with an offset defined by thresholdOffset
-  // Sets calibrated = true after numCalibrate calls
+  // Print the current barrier value to the serial console
   Serial.println(barrierValue);
+  
+  // Add the current barrier value to the threshold sum
   threshold = threshold + barrierValue;
+  
+  // Increment the index
   idx = idx + 1;
+  
+  // If the index has reached numCalibrate, calculate the mean threshold value
+  // and set the calibrated flag to true
   if (idx >= numCalibrate){
     threshold = threshold / numCalibrate;
+    
     Serial.println("Sensor calbirated");
     Serial.println(threshold);
+    
+    // Print a message to the LCD
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Sensor Calibrated");
+    
+    // Subtract the threshold offset
     threshold = threshold - thresholdOffset;
     calibrated = true; 
   }
+
+  // Delay for 100 milliseconds
   delay(100);
 }
 
+
+// The LED() function sets the state of the red, yellow, and green LEDs
+// based on the value of the LED_mode parameter.
+//
+// @param {number} LED_mode - An integer representing the desired LED state.
+//                            1 = red LED on, yellow and green LEDs off
+//                            2 = yellow LED on, red and green LEDs off
+//                            3 = green LED on, red and yellow LEDs off
+//                            Any other value = all LEDs off
 void LED(int LED_mode)
 {
-  // The function LED sets the leds depending on the LED_mode Parameter
   if (LED_mode == 1)
   {
     digitalWrite(ledRed, HIGH);  
