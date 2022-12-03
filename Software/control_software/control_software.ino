@@ -17,8 +17,8 @@ const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5;
 
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
 
-// Counter System Components
-#define photoRes PC4     // Photo Resistor Pin
+// Photo Resistor Pin
+#define photoRes PC4
 
 // CNC Shield Pins
 // Stepper X: Crane Lift Axis
@@ -31,12 +31,12 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 #define dirPinY 6
 #define limitY 10
 
-//Stepper Z: Transpor System 1/conveyor belt Axis
-#define stepPinZ PF4    // alt 4
+//Stepper Z: Transport System 1/conveyor belt Axis
+#define stepPinZ PF4
 #define dirPinZ 7
 #define limitZ 11
 
-// define Shield Pins for Spindle-Axis A (using pins D12 and D13) not used currently
+// define Shield Pins for Spindle-Axis A (using pins D12 and D13)
 #define stepPinA 12
 #define dirPinA 13
 
