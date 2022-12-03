@@ -178,7 +178,6 @@ void setup() {
 }
 
 
-
 // The calibrate_photoresistor() function calibrates the light barrier
 // by calculating a threshold value that is used to determine when the barrier is triggered.
 // The threshold is calculated as the arithmetic mean of `numCalibrate` measurements,
@@ -300,15 +299,21 @@ void count_goods()
 }
 
 
+// The loop() function is the main loop of the program, which controls the overall flow of the system.
+// It contains a series of if-else statements that determine which mode the system is in and what actions to take.
+// Each mode corresponds to a different stage in the operation of the system,
+// such as calibrating the light barrier, dividing the goods, or moving to a certain position.
 void loop()
 {      
+  // Read the current state of the limit switches and start button
   limitXState = digitalRead(limitX);
   limitYState = digitalRead(limitY);
   bStartState = bStart.pressed();
 
   // Mode Switch Logic and Mode Logic that has to happen once
-  if (bStartState && mode == 0 && !paused)                      //Mode 1 Safe to Start, Requirement: Button Start
-  {
+  if (bStartState && mode == 0 && !paused) {
+    // Mode 1: Check if the system is safe to start
+    // Requirement: Button Start must be pressed
     Serial.println("Is System Safe to Start?");
     lcd.clear();
     lcd.setCursor(0,0);
@@ -321,8 +326,9 @@ void loop()
     LED(2);
     mode = mode + 1;
   }
-  else if (((!limitXState && !limitYState && bStartState && mode == 1) || mode == 10) && !paused)   //Mode 2 Calibrate Light Barrier, Requirement: Button Start
-  {  
+  else if (((!limitXState && !limitYState && bStartState && mode == 1) || mode == 10) && !paused) {
+    // Mode 2: Calibrate the light barrier
+    // Requirement: Button Start must be pressed and the limit switches must not be pressed
     Serial.println("Begin Light Barrier Calibration:");
     lcd.clear();
     lcd.setCursor(0,0);
@@ -335,8 +341,9 @@ void loop()
     
     mode = 2;
   }
-  else if (calibrated && mode == 2 && !paused)   //Mode 3 Divide Goods, Requirement: Ligth Barrier calibrated
-  {
+  else if (calibrated && mode == 2 && !paused) {
+    // Mode 3: Divide the goods into boxes
+    // Requirement: The light barrier must be calibrated
     stepperX.disableOutputs();
     Serial.println("Start of Box filling");
 
@@ -351,8 +358,9 @@ void loop()
     stepperA.setSpeed(moADirection*moASpeed);
     mode = mode + 1;
   }
-  else if (countVar >= countMax && mode == 3 && !paused)   //Mode 4 Roation Ref, Requirement: countVar >= countMax
-  {
+  else if (countVar >= countMax && mode == 3 && !paused) {
+    // Mode 4: Reference the rotation axis
+    // Requirement: The number of counted items must be greater than or equal to the maximum number of items per box
     stepperZ.setSpeed(0);
     stepperA.setSpeed(0);
 
@@ -372,8 +380,9 @@ void loop()
     countVar = 0;
     mode = mode + 1;
   }
-  else if (limitYState && mode == 4 && !paused)   //Mode 5 Lift Ref, Requirement: Limit Switch Rot reached
-  {
+  else if (limitYState && mode == 4 && !paused) {
+    // Mode 5: Reference the lift axis
+    // Requirement: Limit Switch Rot reached
     stepperY.setSpeed(0);
     stepperY.setCurrentPosition(0);
 
@@ -381,8 +390,9 @@ void loop()
     
     mode = mode + 1;
   }
-  else if (limitXState && mode == 5 && !paused)     //Mode 6 Move to phiPos1, Requirement: Limit Switch Lift reached
-  {
+  else if (limitXState && mode == 5 && !paused) {
+    // Mode 6: Move to phiPos1
+    // Requirement: Limit Switch Lift reached
     stepperX.setSpeed(0);
     stepperX.setCurrentPosition(0);
 
@@ -390,8 +400,9 @@ void loop()
 
     mode = mode + 1;
   }
-  else if (abs(stepperY.currentPosition()) >= phiPos1 && mode == 6 && !paused)     //Mode 7 Move to xPos1, Requirement: Rotation Position 1 reached
-  {
+  else if (abs(stepperY.currentPosition()) >= phiPos1 && mode == 6 && !paused) {
+    // Mode 7: Move to xPos1
+    // Requirement: Rotation Position 1 reached
     stepperY.setSpeed(0);
 
     stepperX.setSpeed(moXDirection*moXSpeed);
@@ -401,24 +412,27 @@ void loop()
 
     mode = mode + 1;
   }
-  else if (abs(stepperX.currentPosition()) >= xPos1 && mode == 7 && !paused)     //Mode 8 Move to phiPo2, Requirement: Lift Position 1 reached
-  {
+  else if (abs(stepperX.currentPosition()) >= xPos1 && mode == 7 && !paused) { 
+    // Mode 8: Move to phiPo2
+    // Requirement: Lift Position 1 reached
     stepperX.setSpeed(0);
 
     stepperY.setSpeed(moYDirection*moYSpeed);
     
     mode = mode + 1;
   }
-  else if (abs(stepperY.currentPosition()) >= phiPos2 && mode == 8 && !paused)     //Mode 9 Move to xPos2, Requirement: Rotation Position 2 reached
-  {
+  else if (abs(stepperY.currentPosition()) >= phiPos2 && mode == 8 && !paused) {
+    // Mode 9: Move to xPos2
+    // Requirement: Rotation Position 2 reached
     stepperY.setSpeed(0);
 
     stepperX.setSpeed(-moXDirection*moXSpeed);
     
     mode = mode + 1;
   }
-  else if (abs(stepperX.currentPosition()) <= xPos2 && mode == 9 && !paused)     //Mode 10 Move to xPos2, Requirement: Lift Position 2 reached
-  {
+  else if (abs(stepperX.currentPosition()) <= xPos2 && mode == 9 && !paused) {
+    // Mode 10: Check Box count
+    // Requirement: Lift Position 2 reached
     stepperX.setSpeed(0);
     countBox = countBox + 1;
     calibrated = false;
