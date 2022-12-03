@@ -112,62 +112,71 @@ bool limitYState = false;         // Limit Switch Y State Variable
 bool bStartState = false;         // Start Button State Variable, Only true in the cylce the button is pressed
 bool paused = false;              // Pause Mode Variable
 
-void setup() 
-{ 
-  // initialize the serial port
+
+// The setup() function is called once when the program starts.
+// It is used to initialize the serial port, LCD, input and output pins,
+// and the parameters for the stepper motors.
+// It also initializes the bStart button, sets the initial state for the LEDs,
+// and prints a message to the LCD indicating that setup is complete.
+// Finally, it attaches interrupt handlers for the pause and stop buttons.
+void setup() {
+  // Initialize the serial port
   Serial.begin(9600);
-  
-  //Initialize LCD
+
+  // Initialize the LCD
   lcd.begin(16,2);
-  
-  // Initialize Inputs
+
+  // Set the input and output modes for the relevant pins
   pinMode(limitX, INPUT_PULLUP);
   pinMode(limitY, INPUT_PULLUP);
   pinMode(photoRes, INPUT);
   pinMode(button2, INPUT_PULLUP);
   pinMode(button3, INPUT_PULLUP);
-  
-  // Initialize Buttons
-  bStart.begin();
- 
-  //Initialize Outputs  
   pinMode(ledGreen, OUTPUT);
   pinMode(ledYellow, OUTPUT);
   pinMode(ledRed, OUTPUT);
   pinMode(stepperEnable, OUTPUT);
+
+  // Initialize the bStart button
+  bStart.begin();
   
-  //Initialize Motor Parameters
-  stepperX.setEnablePin(stepperEnable);             //Enable Pin for ALL Steppers
+  // Initialize the stepper motor parameters
+  stepperX.setAcceleration(moXAccel);
+  stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
+  stepperX.setSpeed(0);
 
-  stepperX.setAcceleration(moXAccel);               //Set Acceleration for Motor X
-  stepperX.setMaxSpeed(moXDirection*moXSpeed*2);    //Set Max Speed for Motor X
-  stepperX.setSpeed(0);                             //Set Motor Speed for init mode Motor X
+  stepperY.setAcceleration(moYAccel);
+  stepperY.setMaxSpeed(moYDirection*moYSpeed*2);
+  stepperY.setSpeed(0);
 
-  stepperY.setAcceleration(moYAccel);               //Set Acceleration for Motor Y
-  stepperY.setMaxSpeed(moYDirection*moYSpeed*2);    //Set Max Speed for Motor Y
-  stepperY.setSpeed(0);                             //Set Motor Speed for init mode Motor Y
+  stepperZ.setAcceleration(moZAccel);
+  stepperZ.setMaxSpeed(moZDirection*moZSpeed*2);
+  stepperZ.setSpeed(0);
 
-  stepperZ.setAcceleration(moZAccel);               //Set Acceleration for Motor Z
-  stepperZ.setMaxSpeed(moZDirection*moZSpeed*2);    //Set Max Speed for Motor Z
-  stepperZ.setSpeed(0);                             //Set Motor Speed for init mode Motor Z
+  stepperA.setAcceleration(moAAccel);
+  stepperA.setMaxSpeed(moADirection*moASpeed*2);
+  stepperA.setSpeed(0);
 
-  stepperA.setAcceleration(moAAccel);               //Set Acceleration for Motor A
-  stepperA.setMaxSpeed(moADirection*moASpeed*2);    //Set Max Speed for Motor A
-  stepperA.setSpeed(0);                             //Set Motor Speed for init mode Motor A
+  // Set the Enable Pin for ALL Stepper motors
+  stepperX.setEnablePin(stepperEnable);
   
-  Serial.println("Setup Finished");
+  // Print a message to the serial console indicating that setup is complete
+  Serial.println("Setup finished");
   
+  // Turn on the red LED to indicate that setup is complete
   LED(1);
 
+  // Print a message to the LCD asking the user to press the start button
   lcd.setCursor(0,0);
   lcd.print("Setup finished");
   lcd.setCursor(0,1);
   lcd.print("press Start");
 
-  //Attach Interrupts for Pause and Stop Handling
+  // Attach interrupt handlers for the pause and stop buttons
   attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
   attachInterrupt(digitalPinToInterrupt(button3), stop, RISING);
 }
+
 
 
 // The calibrate_photoresistor() function calibrates the light barrier
