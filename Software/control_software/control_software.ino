@@ -272,7 +272,7 @@ void count_goods()
   else{
     countState = LOW;
   }
-  
+
   // compare the countState to its previous state
   if (countState != countLastState) {
     // If the state has changed, increment the counter
@@ -298,6 +298,7 @@ void count_goods()
   // Save the current state as the last state, for the next iteration of the loop
   countLastState = countState;
 }
+
 
 void loop()
 {      
@@ -476,27 +477,36 @@ void loop()
   }
 }
 
-void pause(){
-  // Interrupt Event for pausing the system
-  // Stops all motors
-  // Saves all Variables and current modi
-  // Can be reset with Button Start
+
+// The pause() function is an interrupt handler that is called when the pause button is pressed.
+// It stops all the motors and saves the current state of the system.
+// The system can be resumed by pressing the start button.
+// The function also prints a message to the serial console and LCD display,
+// and turns on the yellow LED to indicate that the system is paused.
+void pause() {
+  // Stop all the motors
   stepperX.enableOutputs();
   paused = true;
+
+  // Print a message to the serial console
   Serial.println("Pause");
 
+  // Print a message to the LCD display
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Paused");
 
+  // Turn on the yellow LED to indicate that the system is paused
   LED(2);
 }
 
-void stop(){
-  // Interrupt Event for stopping the system
-  // Stops all motors
-  // Resets all Variables and current modi
-  // Sets system into the init modus
+
+// The stop() function is an interrupt handler that is called when the stop button is pressed.
+// It stops all the motors, resets all the variables, and sets the system into the initial mode.
+// The function also prints a message to the serial console and LCD display,
+// and turns on the red LED to indicate that the system is stopped.
+void stop() {
+  // Stop all the motors
   stepperX.setSpeed(0);
   stepperX.runSpeed();
   stepperY.setSpeed(0);
@@ -506,15 +516,21 @@ void stop(){
   stepperA.setSpeed(0);
   stepperA.runSpeed();
   stepperX.enableOutputs();
+
+  // Reset all the variables
   calibrated = false;
   idx = 0;
   threshold = 0;
   mode = 0;
+
+  // Print a message to the serial console
   Serial.println("Stopp");
 
+  // Print a message to the LCD display
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Stopped");
 
+  // Turn on the red LED to indicate that the system is stopped
   LED(1);
 }
