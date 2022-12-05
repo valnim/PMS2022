@@ -287,8 +287,7 @@ void count_goods()
       // Print the current count value to the LCD display
       lcd.clear();
       lcd.setCursor(0,0);
-      lcd.print("Modus: ");
-      lcd.print(mode, 1);
+      lcd.print("Counting: ");
       lcd.setCursor(0,1);
       lcd.print("actual goods: ");
       lcd.print(countVar, 1);  
