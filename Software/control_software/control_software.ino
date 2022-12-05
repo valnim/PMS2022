@@ -289,7 +289,7 @@ void count_goods()
       lcd.setCursor(0,0);
       lcd.print("Modus: ");
       lcd.print(mode, 1);
-      lcd.setCursor(0,2);
+      lcd.setCursor(0,1);
       lcd.print("actual goods: ");
       lcd.print(countVar, 1);  
     }
@@ -318,7 +318,7 @@ void loop()
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Is System safe?");
-    lcd.setCursor(1,0);
+    lcd.setCursor(0,1);
     lcd.print(mode, 1);
     calibrated = false;
     delay(200);
@@ -333,7 +333,7 @@ void loop()
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Begin");
-    lcd.setCursor(1,0);
+    lcd.setCursor(0,1);
     lcd.print("Calibration");
     
     //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
@@ -350,7 +350,7 @@ void loop()
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Start");
-    lcd.setCursor(1,0);
+    lcd.setCursor(0,1);
     lcd.print("Box Filling");
 
     LED(3);
@@ -371,7 +371,7 @@ void loop()
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Box filled");
-    lcd.setCursor(1,0);
+    lcd.setCursor(0,1);
     lcd.print("Start delivering");
 
     //detachInterrupt(digitalPinToInterrupt(limitY));
@@ -447,7 +447,7 @@ void loop()
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Box delivered");
-      lcd.setCursor(1,0);
+      lcd.setCursor(0,1);
       lcd.print("Box count: ");
       lcd.print(countBox, 1);  
       mode = 10;
@@ -460,7 +460,7 @@ void loop()
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("All boxes");
-      lcd.setCursor(1,0);
+      lcd.setCursor(0,1);
       lcd.print("delivered");
 
       LED(1);
