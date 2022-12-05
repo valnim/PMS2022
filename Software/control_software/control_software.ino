@@ -311,162 +311,194 @@ void loop()
   bStartState = bStart.pressed();
 
   // Mode Switch Logic and Mode Logic that has to happen once
-  if (bStartState && mode == 0 && !paused) {
-    // Mode 1: Check if the system is safe to start
-    // Requirement: Button Start must be pressed
-    Serial.println("Is System Safe to Start?");
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Is System safe?");
-    lcd.setCursor(0,1);
-    lcd.print(mode, 1);
-    calibrated = false;
-    delay(200);
+  switch (mode) {
+    case 0:
+      if (bStartState && !paused) {
+        // Mode 1: Check if the system is safe to start
+        // Requirement: Button Start must be pressed
+        Serial.println("Is System Safe to Start?");
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Is System safe?");
+        lcd.setCursor(0,1);
+        lcd.print(mode, 1);
+        calibrated = false;
+        delay(200);
 
-    LED(2);
-    mode = mode + 1;
+        LED(2);
+        mode = mode + 1;
+      }
+      break;
+
+    case 1:
+    case 10:
+      if (((!limitXState && !limitYState && bStartState) || mode == 10) && !paused) {
+        // Mode 2: Calibrate the light barrier
+        // Requirement: Button Start must be pressed and the limit switches must not be pressed
+        Serial.println("Begin Light Barrier Calibration:");
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Begin");
+        lcd.setCursor(0,1);
+        lcd.print("Calibration");
+        
+        //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
+        //attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
+        
+        mode = 2;
+      }
+      break;
+
+    case 2:
+      if (calibrated && !paused) {
+        // Mode 3: Divide the goods into boxes
+        // Requirement: The light barrier must be calibrated
+        stepperX.disableOutputs();
+        Serial.println("Start of Box filling");
+
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Start");
+        lcd.setCursor(0,1);
+        lcd.print("Box Filling");
+
+        LED(3);
+        stepperZ.setSpeed(moZDirection*moZSpeed);
+        stepperA.setSpeed(moADirection*moASpeed);
+        mode = mode + 1;
+      }
+      break;
+
+    case 3:
+      if (countVar >= countMax && !paused) {
+        // Mode 4: Reference the rotation axis
+        // Requirement: The number of counted items must be greater than or equal to the maximum number of items per box
+        stepperZ.setSpeed(0);
+        stepperA.setSpeed(0);
+
+        stepperY.setSpeed(-moYDirection*moYSpeed);
+
+        Serial.println("Box filled ... delivering...");
+
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Box filled");
+        lcd.setCursor(0,1);
+        lcd.print("Start delivering");
+
+        //detachInterrupt(digitalPinToInterrupt(limitY));
+        //detachInterrupt(digitalPinToInterrupt(limitX));
+
+        countVar = 0;
+        mode = mode + 1;
+      }
+      break;
+
+    case 4:
+      if (limitYState && !paused) {
+        // Mode 5: Reference the lift axis
+        // Requirement: Limit Switch Rot reached
+        stepperY.setSpeed(0);
+        stepperY.setCurrentPosition(0);
+
+        stepperX.setSpeed(-moXDirection*moXSpeed);
+        
+        mode = mode + 1;
+      }
+      break;
+
+    case 5:
+      if (limitXState && !paused) {
+        // Mode 6: Move to phiPos1
+        // Requirement: Limit Switch Lift reached
+        stepperX.setSpeed(0);
+        stepperX.setCurrentPosition(0);
+
+        stepperY.setSpeed(moYDirection*moYSpeed);
+
+        mode = mode + 1;
+      }
+      break;
+
+    case 6:
+      if (abs(stepperY.currentPosition()) >= phiPos1 && !paused) {
+        // Mode 7: Move to xPos1
+        // Requirement: Rotation Position 1 reached
+        stepperY.setSpeed(0);
+
+        stepperX.setSpeed(moXDirection*moXSpeed);
+        
+        //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
+        //attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
+
+        mode = mode + 1;
+      }
+      break;
+
+    case 7:
+      if (abs(stepperX.currentPosition()) >= xPos1 && !paused) { 
+        // Mode 8: Move to phiPo2
+        // Requirement: Lift Position 1 reached
+        stepperX.setSpeed(0);
+
+        stepperY.setSpeed(moYDirection*moYSpeed);
+        
+        mode = mode + 1;
+      }
+      break;
+
+    case 8:
+      if (abs(stepperY.currentPosition()) >= phiPos2 && !paused) {
+        // Mode 9: Move to xPos2
+        // Requirement: Rotation Position 2 reached
+        stepperY.setSpeed(0);
+
+        stepperX.setSpeed(-moXDirection*moXSpeed);
+        
+        mode = mode + 1;
+      }
+      break;
+
+    case 9:
+      if (abs(stepperX.currentPosition()) <= xPos2 && mode == 9 && !paused) {
+        // Mode 10: Check Box count
+        // Requirement: Lift Position 2 reached
+        stepperX.setSpeed(0);
+        countBox = countBox + 1;
+        calibrated = false;
+        idx = 0;
+        threshold = 0;
+        stepperX.enableOutputs();    // Disables All Steppers
+
+        if (countBox < countBoxMax){
+          Serial.print("Box delivered: ");
+          Serial.println(countBox);
+
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("Box delivered");
+          lcd.setCursor(0,1);
+          lcd.print("Box count: ");
+          lcd.print(countBox, 1);  
+          mode = 10;
+        }
+        else{
+          mode = 0;
+          countBox = 0;
+          Serial.println("Last Box delivered");
+
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("All boxes");
+          lcd.setCursor(0,1);
+          lcd.print("delivered");
+
+          LED(1);
+        }
+      }
+      break;
   }
-  else if (((!limitXState && !limitYState && bStartState && mode == 1) || mode == 10) && !paused) {
-    // Mode 2: Calibrate the light barrier
-    // Requirement: Button Start must be pressed and the limit switches must not be pressed
-    Serial.println("Begin Light Barrier Calibration:");
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Begin");
-    lcd.setCursor(0,1);
-    lcd.print("Calibration");
-    
-    //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
-    //attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
-    
-    mode = 2;
-  }
-  else if (calibrated && mode == 2 && !paused) {
-    // Mode 3: Divide the goods into boxes
-    // Requirement: The light barrier must be calibrated
-    stepperX.disableOutputs();
-    Serial.println("Start of Box filling");
 
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Start");
-    lcd.setCursor(0,1);
-    lcd.print("Box Filling");
-
-    LED(3);
-    stepperZ.setSpeed(moZDirection*moZSpeed);
-    stepperA.setSpeed(moADirection*moASpeed);
-    mode = mode + 1;
-  }
-  else if (countVar >= countMax && mode == 3 && !paused) {
-    // Mode 4: Reference the rotation axis
-    // Requirement: The number of counted items must be greater than or equal to the maximum number of items per box
-    stepperZ.setSpeed(0);
-    stepperA.setSpeed(0);
-
-    stepperY.setSpeed(-moYDirection*moYSpeed);
-
-    Serial.println("Box filled ... delivering...");
-
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Box filled");
-    lcd.setCursor(0,1);
-    lcd.print("Start delivering");
-
-    //detachInterrupt(digitalPinToInterrupt(limitY));
-    //detachInterrupt(digitalPinToInterrupt(limitX));
-
-    countVar = 0;
-    mode = mode + 1;
-  }
-  else if (limitYState && mode == 4 && !paused) {
-    // Mode 5: Reference the lift axis
-    // Requirement: Limit Switch Rot reached
-    stepperY.setSpeed(0);
-    stepperY.setCurrentPosition(0);
-
-    stepperX.setSpeed(-moXDirection*moXSpeed);
-    
-    mode = mode + 1;
-  }
-  else if (limitXState && mode == 5 && !paused) {
-    // Mode 6: Move to phiPos1
-    // Requirement: Limit Switch Lift reached
-    stepperX.setSpeed(0);
-    stepperX.setCurrentPosition(0);
-
-    stepperY.setSpeed(moYDirection*moYSpeed);
-
-    mode = mode + 1;
-  }
-  else if (abs(stepperY.currentPosition()) >= phiPos1 && mode == 6 && !paused) {
-    // Mode 7: Move to xPos1
-    // Requirement: Rotation Position 1 reached
-    stepperY.setSpeed(0);
-
-    stepperX.setSpeed(moXDirection*moXSpeed);
-    
-    //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
-    //attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
-
-    mode = mode + 1;
-  }
-  else if (abs(stepperX.currentPosition()) >= xPos1 && mode == 7 && !paused) { 
-    // Mode 8: Move to phiPo2
-    // Requirement: Lift Position 1 reached
-    stepperX.setSpeed(0);
-
-    stepperY.setSpeed(moYDirection*moYSpeed);
-    
-    mode = mode + 1;
-  }
-  else if (abs(stepperY.currentPosition()) >= phiPos2 && mode == 8 && !paused) {
-    // Mode 9: Move to xPos2
-    // Requirement: Rotation Position 2 reached
-    stepperY.setSpeed(0);
-
-    stepperX.setSpeed(-moXDirection*moXSpeed);
-    
-    mode = mode + 1;
-  }
-  else if (abs(stepperX.currentPosition()) <= xPos2 && mode == 9 && !paused) {
-    // Mode 10: Check Box count
-    // Requirement: Lift Position 2 reached
-    stepperX.setSpeed(0);
-    countBox = countBox + 1;
-    calibrated = false;
-    idx = 0;
-    threshold = 0;
-    stepperX.enableOutputs();    // Disables All Steppers
-
-    if (countBox < countBoxMax){
-      Serial.print("Box delivered: ");
-      Serial.println(countBox);
-
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("Box delivered");
-      lcd.setCursor(0,1);
-      lcd.print("Box count: ");
-      lcd.print(countBox, 1);  
-      mode = 10;
-    }
-    else{
-      mode = 0;
-      countBox = 0;
-      Serial.println("Last Box delivered");
-
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("All boxes");
-      lcd.setCursor(0,1);
-      lcd.print("delivered");
-
-      LED(1);
-    }
-  }
-  
   if (!paused){
     stepperX.runSpeed();
     stepperY.runSpeed();
