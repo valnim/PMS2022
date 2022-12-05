@@ -313,9 +313,9 @@ void loop()
   // Mode Switch Logic and Mode Logic that has to happen once
   switch (mode) {
     case 0:
+      // Mode 1: Check if the system is safe to start
+      // Requirement: Button Start must be pressed
       if (bStartState && !paused) {
-        // Mode 1: Check if the system is safe to start
-        // Requirement: Button Start must be pressed
         Serial.println("Is System Safe to Start?");
         lcd.clear();
         lcd.setCursor(0,0);
@@ -332,9 +332,9 @@ void loop()
 
     case 1:
     case 10:
+      // Mode 2: Calibrate the light barrier
+      // Requirement: Button Start must be pressed and the limit switches must not be pressed
       if (((!limitXState && !limitYState && bStartState) || mode == 10) && !paused) {
-        // Mode 2: Calibrate the light barrier
-        // Requirement: Button Start must be pressed and the limit switches must not be pressed
         Serial.println("Begin Light Barrier Calibration:");
         lcd.clear();
         lcd.setCursor(0,0);
@@ -350,9 +350,9 @@ void loop()
       break;
 
     case 2:
+      // Mode 3: Divide the goods into boxes
+      // Requirement: The light barrier must be calibrated
       if (calibrated && !paused) {
-        // Mode 3: Divide the goods into boxes
-        // Requirement: The light barrier must be calibrated
         stepperX.disableOutputs();
         Serial.println("Start of Box filling");
 
@@ -370,9 +370,9 @@ void loop()
       break;
 
     case 3:
+      // Mode 4: Reference the rotation axis
+      // Requirement: The number of counted items must be greater than or equal to the maximum number of items per box
       if (countVar >= countMax && !paused) {
-        // Mode 4: Reference the rotation axis
-        // Requirement: The number of counted items must be greater than or equal to the maximum number of items per box
         stepperZ.setSpeed(0);
         stepperA.setSpeed(0);
 
@@ -395,9 +395,9 @@ void loop()
       break;
 
     case 4:
+      // Mode 5: Reference the lift axis
+      // Requirement: Limit Switch Rot reached
       if (limitYState && !paused) {
-        // Mode 5: Reference the lift axis
-        // Requirement: Limit Switch Rot reached
         stepperY.setSpeed(0);
         stepperY.setCurrentPosition(0);
 
@@ -408,9 +408,9 @@ void loop()
       break;
 
     case 5:
+      // Mode 6: Move to phiPos1
+      // Requirement: Limit Switch Lift reached
       if (limitXState && !paused) {
-        // Mode 6: Move to phiPos1
-        // Requirement: Limit Switch Lift reached
         stepperX.setSpeed(0);
         stepperX.setCurrentPosition(0);
 
@@ -421,9 +421,9 @@ void loop()
       break;
 
     case 6:
+      // Mode 7: Move to xPos1
+      // Requirement: Rotation Position 1 reached
       if (abs(stepperY.currentPosition()) >= phiPos1 && !paused) {
-        // Mode 7: Move to xPos1
-        // Requirement: Rotation Position 1 reached
         stepperY.setSpeed(0);
 
         stepperX.setSpeed(moXDirection*moXSpeed);
@@ -436,9 +436,9 @@ void loop()
       break;
 
     case 7:
+      // Mode 8: Move to phiPo2
+      // Requirement: Lift Position 1 reached
       if (abs(stepperX.currentPosition()) >= xPos1 && !paused) { 
-        // Mode 8: Move to phiPo2
-        // Requirement: Lift Position 1 reached
         stepperX.setSpeed(0);
 
         stepperY.setSpeed(moYDirection*moYSpeed);
@@ -448,9 +448,9 @@ void loop()
       break;
 
     case 8:
+      // Mode 9: Move to xPos2
+      // Requirement: Rotation Position 2 reached
       if (abs(stepperY.currentPosition()) >= phiPos2 && !paused) {
-        // Mode 9: Move to xPos2
-        // Requirement: Rotation Position 2 reached
         stepperY.setSpeed(0);
 
         stepperX.setSpeed(-moXDirection*moXSpeed);
@@ -460,9 +460,9 @@ void loop()
       break;
 
     case 9:
+      // Mode 10: Check Box count
+      // Requirement: Lift Position 2 reached
       if (abs(stepperX.currentPosition()) <= xPos2 && mode == 9 && !paused) {
-        // Mode 10: Check Box count
-        // Requirement: Lift Position 2 reached
         stepperX.setSpeed(0);
         countBox = countBox + 1;
         calibrated = false;
