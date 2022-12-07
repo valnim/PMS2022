@@ -348,10 +348,10 @@ void loop()
         lcd.setCursor(0,1);
         lcd.print("Calibration");
         
-        attachInterrupt(digitalPinToInterrupt(limitXp), stopSystem, RISING);
-        attachInterrupt(digitalPinToInterrupt(limitYp), stopSystem, RISING);
-        attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, RISING);
-        attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, RISING);
+        //attachInterrupt(digitalPinToInterrupt(limitXp), stopSystem, RISING);
+        //attachInterrupt(digitalPinToInterrupt(limitYp), stopSystem, RISING);
+        //attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, RISING);
+        //attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, RISING);
         
         mode = 2;
       }
@@ -394,7 +394,7 @@ void loop()
         lcd.setCursor(0,1);
         lcd.print("Start delivering");
 
-        detachInterrupt(digitalPinToInterrupt(limitYn));
+        //detachInterrupt(digitalPinToInterrupt(limitYn));
 
         countVar = 0;
         mode = mode + 1;
@@ -410,7 +410,7 @@ void loop()
 
         stepperX.setSpeed(-moXDirection*moXSpeed);
 
-        detachInterrupt(digitalPinToInterrupt(limitXn));
+        //detachInterrupt(digitalPinToInterrupt(limitXn));
         
         mode = mode + 1;
       }
