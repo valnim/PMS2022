@@ -169,7 +169,7 @@ void setup() {
   Serial.println("Setup finished");
   
   // Turn on the red LED to indicate that setup is complete
-  LED(1);
+  statusLed(1);
 
   // Print a message to the LCD asking the user to press the start button
   lcd.setCursor(0,0);
@@ -178,18 +178,18 @@ void setup() {
   lcd.print("press Start");
 
   // Attach interrupt handlers for the pause and stop buttons
-  attachInterrupt(digitalPinToInterrupt(button2), pause, RISING);
-  attachInterrupt(digitalPinToInterrupt(button3), stop, RISING);
+  attachInterrupt(digitalPinToInterrupt(button2), pauseSystem, RISING);
+  attachInterrupt(digitalPinToInterrupt(button3), stopSystem, RISING);
 }
 
 
-// The calibrate_photoresistor() function calibrates the light barrier
+// The calibratePhotoresistor() function calibrates the light barrier
 // by calculating a threshold value that is used to determine when the barrier is triggered.
 // The threshold is calculated as the arithmetic mean of `numCalibrate` measurements,
 // with an offset defined by `thresholdOffset`.
 //
 // After `numCalibrate` calls to this function, the `calibrated` flag is set to `true`.
-void calibrate_photoresistor()
+void calibratePhotoresistor()
 {
   // Print the current barrier value to the serial console
   Serial.println(barrierValue);
@@ -223,29 +223,29 @@ void calibrate_photoresistor()
 }
 
 
-// The LED() function sets the state of the red, yellow, and green LEDs
-// based on the value of the LED_mode parameter.
+// The statusLed() function sets the state of the red, yellow, and green LEDs
+// based on the value of the ledMode parameter.
 //
-// @param {number} LED_mode - An integer representing the desired LED state.
+// @param {number} ledMode - An integer representing the desired LED state.
 //                            1 = red LED on, yellow and green LEDs off
 //                            2 = yellow LED on, red and green LEDs off
 //                            3 = green LED on, red and yellow LEDs off
 //                            Any other value = all LEDs off
-void LED(int LED_mode)
+void statusLed(int ledMode)
 {
-  if (LED_mode == 1)
+  if (ledMode == 1)
   {
     digitalWrite(ledRed, HIGH);  
     digitalWrite(ledYellow, LOW);
     digitalWrite(ledGreen, LOW);    
   }
-  else if (LED_mode == 2)
+  else if (ledMode == 2)
   {
     digitalWrite(ledRed, LOW);
     digitalWrite(ledYellow, HIGH);
     digitalWrite(ledGreen, LOW);
   }
-  else if (LED_mode == 3)
+  else if (ledMode == 3)
   {
     digitalWrite(ledRed, LOW);
     digitalWrite(ledYellow, LOW);
@@ -260,13 +260,13 @@ void LED(int LED_mode)
 }
 
 
-// The count_goods() function handles the detection of goods using edge detection.
+// The countGoods() function handles the detection of goods using edge detection.
 // If the barrier sensor value falls below the threshold, an item is counted.
 // The function compares the current state of the sensor to its previous state,
 // and increments the counter if the state has changed from LOW to HIGH.
 //
 // The current count value is printed to the serial console and LCD display.
-void count_goods()
+void countGoods()
 {   
   // If the barrier sensor value is below the threshold, set the count state to HIGH
   if (barrierValue < threshold){        
@@ -331,7 +331,7 @@ void loop()
         calibrated = false;
         delay(200);
 
-        LED(2);
+        statusLed(2);
         mode = mode + 1;
       }
       break;
@@ -348,10 +348,10 @@ void loop()
         lcd.setCursor(0,1);
         lcd.print("Calibration");
         
-        attachInterrupt(digitalPinToInterrupt(limitXp), stop, RISING);
-        attachInterrupt(digitalPinToInterrupt(limitYp), stop, RISING);
-        attachInterrupt(digitalPinToInterrupt(limitXn), stop, RISING);
-        attachInterrupt(digitalPinToInterrupt(limitYn), stop, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitXp), stopSystem, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitYp), stopSystem, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, RISING);
         
         mode = 2;
       }
@@ -361,7 +361,7 @@ void loop()
       // Mode 3: Divide the goods into boxes
       // Requirement: The light barrier must be calibrated
       if (calibrated && !paused) {
-        stepperX.disableOutputs();
+        stepperX.disableOutputs();                  // Enables the Stepper Motors
         Serial.println("Start of Box filling");
 
         lcd.clear();
@@ -370,7 +370,7 @@ void loop()
         lcd.setCursor(0,1);
         lcd.print("Box Filling");
 
-        LED(3);
+        statusLed(3);
         stepperZ.setSpeed(moZDirection*moZSpeed);
         stepperA.setSpeed(moADirection*moASpeed);
         mode = mode + 1;
@@ -437,7 +437,7 @@ void loop()
 
         stepperX.setSpeed(moXDirection*moXSpeed);
         
-        attachInterrupt(digitalPinToInterrupt(limitYn), stop, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, RISING);
 
         mode = mode + 1;
       }
@@ -451,7 +451,7 @@ void loop()
 
         stepperY.setSpeed(moYDirection*moYSpeed);
         
-        attachInterrupt(digitalPinToInterrupt(limitXn), stop, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, RISING);
 
         mode = mode + 1;
       }
@@ -472,7 +472,7 @@ void loop()
     case 9:
       // Mode 10: Check Box count
       // Requirement: Lift Position 2 reached
-      if (abs(stepperX.currentPosition()) <= xPos2 && mode == 9 && !paused) {
+      if (abs(stepperX.currentPosition()) <= xPos2 && !paused) {
         stepperX.setSpeed(0);
         countBox = countBox + 1;
         calibrated = false;
@@ -503,7 +503,7 @@ void loop()
           lcd.setCursor(0,1);
           lcd.print("delivered");
 
-          LED(1);
+          statusLed(1);
         }
       }
       break;
@@ -517,7 +517,7 @@ void loop()
   else if (paused && bStartState){
     paused = false;
     if (mode > 2){
-      stepperX.disableOutputs();
+      stepperX.disableOutputs();            // Enables the Stepper Motors
       lcd.clear();      
     }
   }
@@ -525,23 +525,23 @@ void loop()
   // Mode Logic that has to be run each cycle
   if (mode == 2 && !paused){
     barrierValue = analogRead(photoRes);
-    calibrate_photoresistor();              // call of calibration algorithm
+    calibratePhotoresistor();              // call of calibration algorithm
   }
   else if (mode == 3 && !paused){    
     barrierValue = analogRead(photoRes);    // current light barrier sensor value
-    count_goods();                          // counter logic checks if light barrier detects goods 
+    countGoods();                          // counter logic checks if light barrier detects goods 
   }
 }
 
 
-// The pause() function is an interrupt handler that is called when the pause button is pressed.
+// The pauseSystem() function is an interrupt handler that is called when the pause button is pressed.
 // It stops all the motors and saves the current state of the system.
 // The system can be resumed by pressing the start button.
 // The function also prints a message to the serial console and LCD display,
 // and turns on the yellow LED to indicate that the system is paused.
-void pause() {
+void pauseSystem() {
   // Stop all the motors
-  stepperX.enableOutputs();
+  stepperX.enableOutputs();     // Disables the Stepper Motors
   paused = true;
 
   // Print a message to the serial console
@@ -553,15 +553,15 @@ void pause() {
   lcd.print("Paused");
 
   // Turn on the yellow LED to indicate that the system is paused
-  LED(2);
+  statusLed(2);
 }
 
 
-// The stop() function is an interrupt handler that is called when the stop button is pressed.
+// The stopSystem() function is an interrupt handler that is called when the stop button is pressed.
 // It stops all the motors, resets all the variables, and sets the system into the initial mode.
 // The function also prints a message to the serial console and LCD display,
 // and turns on the red LED to indicate that the system is stopped.
-void stop() {
+void stopSystem() {
   // Stop all the motors
   stepperX.setSpeed(0);
   stepperX.runSpeed();
@@ -588,5 +588,5 @@ void stop() {
   lcd.print("Stopped");
 
   // Turn on the red LED to indicate that the system is stopped
-  LED(1);
+  statusLed(1);
 }
