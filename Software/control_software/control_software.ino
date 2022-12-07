@@ -24,17 +24,18 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 // Stepper X: Crane Lift Axis
 #define stepPinX 2
 #define dirPinX 5
-#define limitX 9
+#define limitXp PB1
+#define limitXn PB15
 
 //Stepper Y: Crane Rot/Phi Axis 
 #define stepPinY 3
 #define dirPinY 6
-#define limitY 10
+#define limitYp PB14
+#define limitYn PB13
 
 //Stepper Z: Transport System 1/conveyor belt Axis
 #define stepPinZ PF4
 #define dirPinZ 7
-#define limitZ 11
 
 // define Shield Pins for Spindle-Axis A (using pins D12 and D13)
 #define stepPinA 12
@@ -107,8 +108,10 @@ const int numCalibrate = 10;      // Number of values that are middled
 int idx = 0;                      // Index variable
 int barrierValue = 0;             // Light barrier sensor value
 
-bool limitXState = false;         // Limit Switch X State Variable
-bool limitYState = false;         // Limit Switch Y State Variable
+bool limitXpState = false;         // Limit Switch X+ State Variable
+bool limitYpState = false;         // Limit Switch Y+ State Variable
+bool limitXnState = false;         // Limit Switch X- State Variable
+bool limitYnState = false;         // Limit Switch Y- State Variable
 bool bStartState = false;         // Start Button State Variable, Only true in the cylce the button is pressed
 bool paused = false;              // Pause Mode Variable
 
@@ -127,8 +130,10 @@ void setup() {
   lcd.begin(16,2);
 
   // Set the input and output modes for the relevant pins
-  pinMode(limitX, INPUT_PULLUP);
-  pinMode(limitY, INPUT_PULLUP);
+  pinMode(limitXp, INPUT_PULLUP);
+  pinMode(limitYp, INPUT_PULLUP);
+  pinMode(limitXn, INPUT_PULLUP);
+  pinMode(limitYn, INPUT_PULLUP);
   pinMode(photoRes, INPUT);
   pinMode(button2, INPUT_PULLUP);
   pinMode(button3, INPUT_PULLUP);
@@ -305,8 +310,10 @@ void count_goods()
 void loop()
 {      
   // Read the current state of the limit switches and start button
-  limitXState = digitalRead(limitX);
-  limitYState = digitalRead(limitY);
+  limitXpState = digitalRead(limitXp);
+  limitYpState = digitalRead(limitYp);
+  limitXnState = digitalRead(limitXn);
+  limitYnState = digitalRead(limitYn);
   bStartState = bStart.pressed();
 
   // Mode Switch Logic and Mode Logic that has to happen once
@@ -333,7 +340,7 @@ void loop()
     case 10:
       // Mode 2: Calibrate the light barrier
       // Requirement: Button Start must be pressed and the limit switches must not be pressed
-      if (((!limitXState && !limitYState && bStartState) || mode == 10) && !paused) {
+      if (((!limitXpState && !limitYpState && !limitXnState && !limitYnState && bStartState) || mode == 10) && !paused) {
         Serial.println("Begin Light Barrier Calibration:");
         lcd.clear();
         lcd.setCursor(0,0);
@@ -341,8 +348,10 @@ void loop()
         lcd.setCursor(0,1);
         lcd.print("Calibration");
         
-        //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
-        //attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitXp), stop, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitYp), stop, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitXn), stop, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitYn), stop, RISING);
         
         mode = 2;
       }
@@ -385,8 +394,7 @@ void loop()
         lcd.setCursor(0,1);
         lcd.print("Start delivering");
 
-        //detachInterrupt(digitalPinToInterrupt(limitY));
-        //detachInterrupt(digitalPinToInterrupt(limitX));
+        detachInterrupt(digitalPinToInterrupt(limitYn));
 
         countVar = 0;
         mode = mode + 1;
@@ -396,11 +404,13 @@ void loop()
     case 4:
       // Mode 5: Reference the lift axis
       // Requirement: Limit Switch Rot reached
-      if (limitYState && !paused) {
+      if (limitYnState && !paused) {
         stepperY.setSpeed(0);
         stepperY.setCurrentPosition(0);
 
         stepperX.setSpeed(-moXDirection*moXSpeed);
+
+        detachInterrupt(digitalPinToInterrupt(limitXn));
         
         mode = mode + 1;
       }
@@ -409,7 +419,7 @@ void loop()
     case 5:
       // Mode 6: Move to phiPos1
       // Requirement: Limit Switch Lift reached
-      if (limitXState && !paused) {
+      if (limitXnState && !paused) {
         stepperX.setSpeed(0);
         stepperX.setCurrentPosition(0);
 
@@ -427,8 +437,7 @@ void loop()
 
         stepperX.setSpeed(moXDirection*moXSpeed);
         
-        //attachInterrupt(digitalPinToInterrupt(limitX), stop, RISING);
-        //attachInterrupt(digitalPinToInterrupt(limitY), stop, RISING);
+        attachInterrupt(digitalPinToInterrupt(limitYn), stop, RISING);
 
         mode = mode + 1;
       }
@@ -442,6 +451,8 @@ void loop()
 
         stepperY.setSpeed(moYDirection*moYSpeed);
         
+        attachInterrupt(digitalPinToInterrupt(limitXn), stop, RISING);
+
         mode = mode + 1;
       }
       break;
