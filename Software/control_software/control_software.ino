@@ -70,7 +70,7 @@ int moZAccel = 20000;                   // Motor Z Acceleration
 int moZDirection = -1;                  // Motor Z Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
 
 // Transport System 1 Motor 2
-int moASpeed = 400;                     // Motor A Base Speed 
+int moASpeed = 1000;                    // Motor A Base Speed 
 int moAMaxSpeedMult = 2;                // Motor A Max Speed Multiplier
 int moAAccel = 20000;                   // Motor A Acceleration
 int moADirection = -1;                  // Motor A Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
@@ -513,6 +513,7 @@ void loop()
     stepperX.runSpeed();
     stepperY.runSpeed();
     stepperZ.runSpeed();
+    stepperA.runSpeed();
   }
   else if (paused && bStartState){
     paused = false;
