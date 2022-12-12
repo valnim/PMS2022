@@ -3,43 +3,43 @@
 #include <Button.h>
 
 // Buttons
-#define button1 PA12  //Button Start / System is Safe to Start
-#define button2 PA11  //Button Pause            
-#define button3 PB12  //Button Emergency Stop
+#define button1 A1  //Button Start / System is Safe to Start
+#define button2 A2  //Button Pause            
+#define button3 A3  //Button Emergency Stop
 
 // Indicator Leds
-#define ledGreen PC8  //Green LED
-#define ledYellow PC6 //Yellow LED
-#define ledRed PC5    //Red LED
+#define ledGreen A4  //Green LED
+#define ledYellow A5 //Yellow LED
+#define ledRed 13    //Red LED
 
 //Define LCD pins
-const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5; 
+//const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5; 
 
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
+//LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
 
 // Photo Resistor Pin
-#define photoRes PC4
+#define photoRes A0
 
 // CNC Shield Pins
 // Stepper X: Crane Lift Axis
 #define stepPinX 2
 #define dirPinX 5
-#define limitXp PB1
-#define limitXn PB15
+#define limitXp 11
+#define limitXn 9
 
 //Stepper Y: Crane Rot/Phi Axis 
 #define stepPinY 3
 #define dirPinY 6
-#define limitYp PB14
-#define limitYn PB13
+#define limitYp 12
+#define limitYn 10
 
 //Stepper Z: Transport System 1/conveyor belt Axis
-#define stepPinZ PF4
+#define stepPinZ 4
 #define dirPinZ 7
 
 // define Shield Pins for Spindle-Axis A (using pins D12 and D13)
-#define stepPinA 12
-#define dirPinA 13
+//#define stepPinA 12
+//#define dirPinA 13
 
 //Enable Outputs of all Stepper Drivers
 #define stepperEnable 8     
@@ -64,7 +64,7 @@ int moYAccel = 20000;                   // Motor Y Acceleration
 int moYDirection = -1;                  // Motor Y Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
 
 // Transport System 1 Motor 1
-int moZSpeed = 400;                     // Motor Z Base Speed 
+int moZSpeed = 700;                     // Motor Z Base Speed 
 int moZMaxSpeedMult = 2;                // Motor Z Max Speed Multiplier
 int moZAccel = 20000;                   // Motor Z Acceleration
 int moZDirection = -1;                  // Motor Z Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
@@ -85,7 +85,7 @@ const int xPos2 = stepsPerRevX*2.5;     // Position 2 for Motor 1 in Lift-Axis
 AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
 AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
 AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Transport System 1 Motors 1
-AccelStepper stepperA(1, stepPinA, dirPinA);    // Transport System 1 Motors 2
+//AccelStepper stepperA(1, stepPinA, dirPinA);    // Transport System 1 Motors 2
 
 //intialize the Buttons as ojects
 Button bStart(button1);  // Button Start
@@ -127,7 +127,7 @@ void setup() {
   Serial.begin(9600);
 
   // Initialize the LCD
-  lcd.begin(16,2);
+  //lcd.begin(16,2);
 
   // Set the input and output modes for the relevant pins
   pinMode(limitXp, INPUT_PULLUP);
@@ -158,9 +158,9 @@ void setup() {
   stepperZ.setMaxSpeed(moZDirection*moZSpeed*2);
   stepperZ.setSpeed(0);
 
-  stepperA.setAcceleration(moAAccel);
-  stepperA.setMaxSpeed(moADirection*moASpeed*2);
-  stepperA.setSpeed(0);
+  //stepperA.setAcceleration(moAAccel);
+  //stepperA.setMaxSpeed(moADirection*moASpeed*2);
+  //stepperA.setSpeed(0);
 
   // Set the Enable Pin for ALL Stepper motors
   stepperX.setEnablePin(stepperEnable);
@@ -172,10 +172,10 @@ void setup() {
   statusLed(1);
 
   // Print a message to the LCD asking the user to press the start button
-  lcd.setCursor(0,0);
-  lcd.print("Setup finished");
-  lcd.setCursor(0,1);
-  lcd.print("press Start");
+  //lcd.setCursor(0,0);
+  //lcd.print("Setup finished");
+  //lcd.setCursor(0,1);
+  //lcd.print("press Start");
 
   // Attach interrupt handlers for the pause and stop buttons
   attachInterrupt(digitalPinToInterrupt(button2), pauseSystem, RISING);
@@ -209,9 +209,9 @@ void calibratePhotoresistor()
     Serial.println(threshold);
     
     // Print a message to the LCD
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Sensor Calibrated");
+    //lcd.clear();
+    //lcd.setCursor(0,0);
+    //lcd.print("Sensor Calibrated");
     
     // Subtract the threshold offset
     threshold = threshold - thresholdOffset;
@@ -290,12 +290,12 @@ void countGoods()
       Serial.println(countVar);
 
       // Print the current count value to the LCD display
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("Counting: ");
-      lcd.setCursor(0,1);
-      lcd.print("actual goods: ");
-      lcd.print(countVar, 1);  
+      //lcd.clear();
+      //lcd.setCursor(0,0);
+      //lcd.print("Counting: ");
+      //lcd.setCursor(0,1);
+      //lcd.print("actual goods: ");
+      //lcd.print(countVar, 1);  
     }
   }
   // Save the current state as the last state, for the next iteration of the loop
@@ -323,11 +323,11 @@ void loop()
       // Requirement: Button Start must be pressed
       if (bStartState && !paused) {
         Serial.println("Is System Safe to Start?");
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Is System safe?");
-        lcd.setCursor(0,1);
-        lcd.print(mode, 1);
+        //lcd.clear();
+        //lcd.setCursor(0,0);
+        //lcd.print("Is System safe?");
+        //lcd.setCursor(0,1);
+        //lcd.print(mode, 1);
         calibrated = false;
         delay(200);
 
@@ -342,11 +342,11 @@ void loop()
       // Requirement: Button Start must be pressed and the limit switches must not be pressed
       if (((!limitXpState && !limitYpState && !limitXnState && !limitYnState && bStartState) || mode == 10) && !paused) {
         Serial.println("Begin Light Barrier Calibration:");
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Begin");
-        lcd.setCursor(0,1);
-        lcd.print("Calibration");
+        //lcd.clear();
+        //lcd.setCursor(0,0);
+        //lcd.print("Begin");
+        //lcd.setCursor(0,1);
+        //lcd.print("Calibration");
         
         //attachInterrupt(digitalPinToInterrupt(limitXp), stopSystem, RISING);
         //attachInterrupt(digitalPinToInterrupt(limitYp), stopSystem, RISING);
@@ -364,15 +364,15 @@ void loop()
         stepperX.disableOutputs();                  // Enables the Stepper Motors
         Serial.println("Start of Box filling");
 
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Start");
-        lcd.setCursor(0,1);
-        lcd.print("Box Filling");
+        //lcd.clear();
+        //lcd.setCursor(0,0);
+        //lcd.print("Start");
+        //lcd.setCursor(0,1);
+        //lcd.print("Box Filling");
 
         statusLed(3);
         stepperZ.setSpeed(moZDirection*moZSpeed);
-        stepperA.setSpeed(moADirection*moASpeed);
+        //stepperA.setSpeed(moADirection*moASpeed);
         mode = mode + 1;
       }
       break;
@@ -382,17 +382,17 @@ void loop()
       // Requirement: The number of counted items must be greater than or equal to the maximum number of items per box
       if (countVar >= countMax && !paused) {
         stepperZ.setSpeed(0);
-        stepperA.setSpeed(0);
+        //stepperA.setSpeed(0);
 
         stepperY.setSpeed(-moYDirection*moYSpeed);
 
         Serial.println("Box filled ... delivering...");
 
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Box filled");
-        lcd.setCursor(0,1);
-        lcd.print("Start delivering");
+        //lcd.clear();
+        //lcd.setCursor(0,0);
+        //lcd.print("Box filled");
+        //lcd.setCursor(0,1);
+        //lcd.print("Start delivering");
 
         //detachInterrupt(digitalPinToInterrupt(limitYn));
 
@@ -436,6 +436,7 @@ void loop()
         stepperY.setSpeed(0);
 
         stepperX.setSpeed(moXDirection*moXSpeed);
+        stepperX.runSpeed();
         
         attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, RISING);
 
@@ -484,12 +485,12 @@ void loop()
           Serial.print("Box delivered: ");
           Serial.println(countBox);
 
-          lcd.clear();
-          lcd.setCursor(0,0);
-          lcd.print("Box delivered");
-          lcd.setCursor(0,1);
-          lcd.print("Box count: ");
-          lcd.print(countBox, 1);  
+          //lcd.clear();
+          //lcd.setCursor(0,0);
+          //lcd.print("Box delivered");
+          //lcd.setCursor(0,1);
+          //lcd.print("Box count: ");
+          //lcd.print(countBox, 1);  
           mode = 10;
         }
         else{
@@ -497,11 +498,11 @@ void loop()
           countBox = 0;
           Serial.println("Last Box delivered");
 
-          lcd.clear();
-          lcd.setCursor(0,0);
-          lcd.print("All boxes");
-          lcd.setCursor(0,1);
-          lcd.print("delivered");
+          //lcd.clear();
+          //lcd.setCursor(0,0);
+          //lcd.print("All boxes");
+          //lcd.setCursor(0,1);
+          //lcd.print("delivered");
 
           statusLed(1);
         }
@@ -513,13 +514,13 @@ void loop()
     stepperX.runSpeed();
     stepperY.runSpeed();
     stepperZ.runSpeed();
-    stepperA.runSpeed();
+    //stepperA.runSpeed();
   }
   else if (paused && bStartState){
     paused = false;
     if (mode > 2){
       stepperX.disableOutputs();            // Enables the Stepper Motors
-      lcd.clear();      
+      //lcd.clear();      
     }
   }
   
@@ -549,9 +550,9 @@ void pauseSystem() {
   Serial.println("Pause");
 
   // Print a message to the LCD display
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Paused");
+  //lcd.clear();
+  //lcd.setCursor(0,0);
+  //lcd.print("Paused");
 
   // Turn on the yellow LED to indicate that the system is paused
   statusLed(2);
@@ -570,8 +571,8 @@ void stopSystem() {
   stepperY.runSpeed();
   stepperZ.setSpeed(0);
   stepperZ.runSpeed();
-  stepperA.setSpeed(0);
-  stepperA.runSpeed();
+  //stepperA.setSpeed(0);
+  //stepperA.runSpeed();
   stepperX.enableOutputs();
 
   // Reset all the variables
@@ -584,9 +585,9 @@ void stopSystem() {
   Serial.println("Stopp");
 
   // Print a message to the LCD display
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Stopped");
+  //lcd.clear();
+  //lcd.setCursor(0,0);
+  //lcd.print("Stopped");
 
   // Turn on the red LED to indicate that the system is stopped
   statusLed(1);
