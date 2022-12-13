@@ -44,6 +44,120 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 
+// Buttons
+#define button1 PA12  //Button Start / System is Safe to Start
+#define button2 PA11  //Button Pause
+#define button3 PB12  //Button Emergency Stop
+
+// Indicator Leds
+#define ledGreen PC8  //Green LED
+#define ledYellow PC6 //Yellow LED
+#define ledRed PC5    //Red LED
+
+//Define LCD pins
+const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5;
+
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+// Photo Resistor Pin
+#define photoRes PC4
+
+// CNC Shield Pins
+// Stepper X: Crane Lift Axis
+#define stepPinX 2
+#define dirPinX 5
+#define limitXp PB1
+#define limitXn PB15
+
+//Stepper Y: Crane Rot/Phi Axis
+#define stepPinY 3
+#define dirPinY 6
+#define limitYp PB14
+#define limitYn PB13
+
+//Stepper Z: Transport System 1/conveyor belt Axis
+#define stepPinZ PF4
+#define dirPinZ 7
+
+// define Shield Pins for Spindle-Axis A (using pins D12 and D13)
+#define stepPinA 12
+#define dirPinA 13
+
+//Enable Outputs of all Stepper Drivers
+#define stepperEnable 8
+
+//Steps Per Revolution of Steppers
+#define stepsPerRevX 200
+#define stepsPerRevY 200
+#define stepsPerRevZ 200
+#define stepsPerRevA 200
+
+// Motor variables
+// Crane Lift Motor
+int moXSpeed = 1000;                    // Motor X Base Speed
+int moXMaxSpeedMult = 2;                // Motor X Max Speed Multiplier
+int moXAccel = 20000;                   // Motor X Acceleration
+int moXDirection = -1;                  // Motor X Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
+
+// Crane Rot Motor
+int moYSpeed = 600;                     // Motor Y Base Speed
+int moYMaxSpeedMult = 2;                // Motor Y Max Speed Multiplier
+int moYAccel = 20000;                   // Motor Y Acceleration
+int moYDirection = -1;                  // Motor Y Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
+
+// Transport System 1 Motor 1
+int moZSpeed = 400;                     // Motor Z Base Speed
+int moZMaxSpeedMult = 2;                // Motor Z Max Speed Multiplier
+int moZAccel = 20000;                   // Motor Z Acceleration
+int moZDirection = -1;                  // Motor Z Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
+
+// Transport System 1 Motor 2
+int moASpeed = 1000;                    // Motor A Base Speed
+int moAMaxSpeedMult = 2;                // Motor A Max Speed Multiplier
+int moAAccel = 20000;                   // Motor A Acceleration
+int moADirection = -1;                  // Motor A Standard Direction Variable (1 - Clockwise, -1 - Counterclockwise)
+
+// Stepper Motor Positions
+const int phiPos1 = stepsPerRevY*2;     // Position 1 for Motor 2 in Phi-Axis
+const int phiPos2 = stepsPerRevY*8.2;   // Position 2 for Motor 2 in Phi-Axis
+const int xPos1 = stepsPerRevX*40;      // Position 1 for Motor 1 in Lift-Axis
+const int xPos2 = stepsPerRevX*2.5;     // Position 2 for Motor 1 in Lift-Axis
+
+//initialize the stepper motors as existing objects
+AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
+AccelStepper stepperY(1, stepPinY, dirPinY);    // Crane Rotation Motor
+AccelStepper stepperZ(1, stepPinZ, dirPinZ);    // Transport System 1 Motors 1
+AccelStepper stepperA(1, stepPinA, dirPinA);    // Transport System 1 Motors 2
+
+//intialize the Buttons as ojects
+Button bStart(button1);  // Button Start
+
+// General Variables
+int mode = 0;                     // Current SFC Mode State
+
+//Counter
+int countVar = 0;                 // Counter Variable for balls in a Box
+int countMax = 5;                 // Max goods count in Transport Box
+int countState = 0;               // Button Count Default State
+int countLastState = 0;           // Button Count Last State
+int countBox = 0;                 // Counter Variable for filled Boxes
+const int countBoxMax = 3;		    // Boxes to be filled
+
+bool calibrated = false;          // Light barrier calibration status
+int threshold = 0;                // Light barrier threshold
+const int thresholdOffset = 140;  // Threshold offset, the lower the offset the higher the sensitivity
+const int numCalibrate = 10;      // Number of values that are middled
+int idx = 0;                      // Index variable
+int barrierValue = 0;             // Light barrier sensor value
+
+bool limitXpState = false;         // Limit Switch X+ State Variable
+bool limitYpState = false;         // Limit Switch Y+ State Variable
+bool limitXnState = false;         // Limit Switch X- State Variable
+bool limitYnState = false;         // Limit Switch Y- State Variable
+bool bStartState = false;         // Start Button State Variable, Only true in the cylce the button is pressed
+bool paused = false;              // Pause Mode Variable
+
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -52,6 +166,12 @@ UART_HandleTypeDef huart2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+void setup(void);
+void calibratePhotoresistor(void);
+void statusLed(int ledMode);
+void countGoods(void);
+void pauseSystem(void);
+void stopSystem(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -456,6 +576,66 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
+void setup(void) {
+  // Initialize the serial port
+  Serial.begin(9600);
+
+  // Initialize the LCD
+  lcd.begin(16,2);
+
+  // Set the input and output modes for the relevant pins
+  pinMode(limitXp, INPUT_PULLUP);
+  pinMode(limitYp, INPUT_PULLUP);
+  pinMode(limitXn, INPUT_PULLUP);
+  pinMode(limitYn, INPUT_PULLUP);
+  pinMode(photoRes, INPUT);
+  pinMode(button2, INPUT_PULLUP);
+  pinMode(button3, INPUT_PULLUP);
+  pinMode(ledGreen, OUTPUT);
+  pinMode(ledYellow, OUTPUT);
+  pinMode(ledRed, OUTPUT);
+  pinMode(stepperEnable, OUTPUT);
+
+  // Initialize the bStart button
+  bStart.begin();
+
+  // Initialize the stepper motor parameters
+  stepperX.setAcceleration(moXAccel);
+  stepperX.setMaxSpeed(moXDirection*moXSpeed*2);
+  stepperX.setSpeed(0);
+
+  stepperY.setAcceleration(moYAccel);
+  stepperY.setMaxSpeed(moYDirection*moYSpeed*2);
+  stepperY.setSpeed(0);
+
+  stepperZ.setAcceleration(moZAccel);
+  stepperZ.setMaxSpeed(moZDirection*moZSpeed*2);
+  stepperZ.setSpeed(0);
+
+  stepperA.setAcceleration(moAAccel);
+  stepperA.setMaxSpeed(moADirection*moASpeed*2);
+  stepperA.setSpeed(0);
+
+  // Set the Enable Pin for ALL Stepper motors
+  stepperX.setEnablePin(stepperEnable);
+
+  // Print a message to the serial console indicating that setup is complete
+  Serial.println("Setup finished");
+
+  // Turn on the red LED to indicate that setup is complete
+  statusLed(1);
+
+  // Print a message to the LCD asking the user to press the start button
+  lcd.setCursor(0,0);
+  lcd.print("Setup finished");
+  lcd.setCursor(0,1);
+  lcd.print("press Start");
+
+  // Attach interrupt handlers for the pause and stop buttons
+  attachInterrupt(digitalPinToInterrupt(button2), pauseSystem, RISING);
+  attachInterrupt(digitalPinToInterrupt(button3), stopSystem, RISING);
+}
+
 
 // The calibratePhotoresistor() function calibrates the light barrier
 // by calculating a threshold value that is used to determine when the barrier is triggered.
@@ -464,6 +644,45 @@ void Error_Handler(void)
 //
 // After `numCalibrate` calls to this function, the `calibrated` flag is set to `true`.
 void calibratePhotoresistor()
+{
+  // Print the current barrier value to the serial console
+  Serial.println(barrierValue);
+
+  // Add the current barrier value to the threshold sum
+  threshold = threshold + barrierValue;
+
+  // Increment the index
+  idx = idx + 1;
+
+  // If the index has reached numCalibrate, calculate the mean threshold value
+  // and set the calibrated flag to true
+  if (idx >= numCalibrate){
+    threshold = threshold / numCalibrate;
+
+    Serial.println("Sensor calbirated");
+    Serial.println(threshold);
+
+    // Print a message to the LCD
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Sensor Calibrated");
+
+    // Subtract the threshold offset
+    threshold = threshold - thresholdOffset;
+    calibrated = true;
+  }
+
+  // Delay for 100 milliseconds
+  delay(100);
+}
+
+// The calibratePhotoresistor() function calibrates the light barrier
+// by calculating a threshold value that is used to determine when the barrier is triggered.
+// The threshold is calculated as the arithmetic mean of `numCalibrate` measurements,
+// with an offset defined by `thresholdOffset`.
+//
+// After `numCalibrate` calls to this function, the `calibrated` flag is set to `true`.
+void calibratePhotoresistor(void)
 {
   // Print the current barrier value to the serial console
   Serial.println(barrierValue);
@@ -540,7 +759,7 @@ void statusLed(int ledMode)
 // and increments the counter if the state has changed from LOW to HIGH.
 //
 // The current count value is printed to the serial console and LCD display.
-void countGoods()
+void countGoods(void)
 {
   // If the barrier sensor value is below the threshold, set the count state to HIGH
   if (barrierValue < threshold){
@@ -582,7 +801,7 @@ void countGoods()
 // The system can be resumed by pressing the start button.
 // The function also prints a message to the serial console and LCD display,
 // and turns on the yellow LED to indicate that the system is paused.
-void pauseSystem() {
+void pauseSystem(void) {
   // Stop all the motors
   stepperX.enableOutputs();     // Disables the Stepper Motors
   paused = true;
@@ -604,7 +823,7 @@ void pauseSystem() {
 // It stops all the motors, resets all the variables, and sets the system into the initial mode.
 // The function also prints a message to the serial console and LCD display,
 // and turns on the red LED to indicate that the system is stopped.
-void stopSystem() {
+void stopSystem(void) {
   // Stop all the motors
   stepperX.setSpeed(0);
   stepperX.runSpeed();
