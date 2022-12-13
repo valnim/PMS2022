@@ -79,7 +79,7 @@ int moADirection = -1;                  // Motor A Standard Direction Variable (
 const int phiPos1 = stepsPerRevY*2;     // Position 1 for Motor 2 in Phi-Axis
 const int phiPos2 = stepsPerRevY*8.2;   // Position 2 for Motor 2 in Phi-Axis
 const int xPos1 = stepsPerRevX*40;      // Position 1 for Motor 1 in Lift-Axis
-const int xPos2 = stepsPerRevX*2.5;     // Position 2 for Motor 1 in Lift-Axis
+const int xPos2 = stepsPerRevX*1;       // Position 2 for Motor 1 in Lift-Axis
 
 //initialize the stepper motors as existing objects
 AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
