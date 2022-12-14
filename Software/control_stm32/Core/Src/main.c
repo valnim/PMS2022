@@ -20,6 +20,7 @@
 #include "main.h"
 #include "stm32f3xx.h"
 #include <button.h>
+#include <AccelStepper>
 
 
 /* Private includes ----------------------------------------------------------*/
@@ -212,6 +213,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  setup();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
