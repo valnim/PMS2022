@@ -3,14 +3,14 @@
 #include <Button.h>
 
 // Buttons
-#define button1 PA12  //Button Start / System is Safe to Start
-#define button2 PA11  //Button Pause            
-#define button3 PB12  //Button Emergency Stop
+#define button1 PA_12  //Button Start / System is Safe to Start
+#define button2 PA_11  //Button Pause            
+#define button3 PB_12  //Button Emergency Stop
 
 // Indicator Leds
-#define ledGreen PC8  //Green LED
-#define ledYellow PC6 //Yellow LED
-#define ledRed PC5    //Red LED
+#define ledGreen PC_8  //Green LED
+#define ledYellow PC_6 //Yellow LED
+#define ledRed PC_5    //Red LED
 
 //Define LCD pins
 const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5; 
@@ -18,23 +18,23 @@ const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
 
 // Photo Resistor Pin
-#define photoRes PC4
+#define photoRes PC_4
 
 // CNC Shield Pins
 // Stepper X: Crane Lift Axis
 #define stepPinX 2
 #define dirPinX 5
-#define limitXp PB1
-#define limitXn PB15
+#define limitXp PB_1
+#define limitXn PB_15
 
 //Stepper Y: Crane Rot/Phi Axis 
 #define stepPinY 3
 #define dirPinY 6
-#define limitYp PB14
-#define limitYn PB13
+#define limitYp PB_14
+#define limitYn PB_13
 
 //Stepper Z: Transport System 1/conveyor belt Axis
-#define stepPinZ PF4
+#define stepPinZ PF_4
 #define dirPinZ 7
 
 // define Shield Pins for Spindle-Axis A (using pins D12 and D13)
