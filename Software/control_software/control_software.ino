@@ -34,7 +34,7 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 #define limitYn PB13
 
 //Stepper Z: Transport System 1/conveyor belt Axis
-#define stepPinZ PF4
+#define stepPinZ 4
 #define dirPinZ 7
 
 // define Shield Pins for Spindle-Axis A (using pins D12 and D13)
