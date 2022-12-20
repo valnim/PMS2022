@@ -465,6 +465,13 @@ void loop()
 
         stepperX.setSpeed(-moXDirection*moXSpeed);      
         
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Box delivered");
+        lcd.setCursor(0,1);
+        lcd.print("Box count: ");
+        lcd.print((countBox + 1), 1);  
+
         mode = mode + 1;
       }
       break;
@@ -484,12 +491,6 @@ void loop()
           Serial.print("Box delivered: ");
           Serial.println(countBox);
 
-          lcd.clear();
-          lcd.setCursor(0,0);
-          lcd.print("Box delivered");
-          lcd.setCursor(0,1);
-          lcd.print("Box count: ");
-          lcd.print(countBox, 1);  
           mode = 10;
         }
         else{
