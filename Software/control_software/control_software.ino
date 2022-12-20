@@ -580,6 +580,9 @@ void stopSystem() {
   idx = 0;
   threshold = 0;
   mode = 0;
+  countBox = 0;
+  countVar = 0;
+  countLastState = 0;
 
   // Print a message to the serial console
   Serial.println("Stopp");
