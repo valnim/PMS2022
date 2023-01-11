@@ -24,7 +24,7 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 // Stepper X: Crane Lift Axis
 #define stepPinX 2
 #define dirPinX 5
-#define limitXp PB1
+#define limitXp PB11
 #define limitXn PB15
 
 //Stepper Y: Crane Rot/Phi Axis 
@@ -79,7 +79,7 @@ int moADirection = -1;                  // Motor A Standard Direction Variable (
 const int phiPos1 = stepsPerRevY*2;     // Position 1 for Motor 2 in Phi-Axis
 const int phiPos2 = stepsPerRevY*8.2;   // Position 2 for Motor 2 in Phi-Axis
 const int xPos1 = stepsPerRevX*40;      // Position 1 for Motor 1 in Lift-Axis
-const int xPos2 = stepsPerRevX*1.6;       // Position 2 for Motor 1 in Lift-Axis
+const int xPos2 = stepsPerRevX*1.5;       // Position 2 for Motor 1 in Lift-Axis
 
 //initialize the stepper motors as existing objects
 AccelStepper stepperX(1, stepPinX, dirPinX);    // Crane Lift Motor
@@ -114,6 +114,11 @@ bool limitXnState = false;         // Limit Switch X- State Variable
 bool limitYnState = false;         // Limit Switch Y- State Variable
 bool bStartState = false;         // Start Button State Variable, Only true in the cylce the button is pressed
 bool paused = false;              // Pause Mode Variable
+
+int counterxp = 0;
+int counterxn = 0;
+int counteryp = 0;
+int counteryn = 0;
 
 
 // The setup() function is called once when the program starts.
@@ -348,10 +353,10 @@ void loop()
         lcd.setCursor(0,1);
         lcd.print("Calibration");
         
-        //attachInterrupt(digitalPinToInterrupt(limitXp), stopSystem, CHANGE);
-        //attachInterrupt(digitalPinToInterrupt(limitYp), stopSystem, CHANGE);
-        //attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, CHANGE);
-        //attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, CHANGE);
+        attachInterrupt(digitalPinToInterrupt(limitXp), pauseSystemXp, HIGH);
+        attachInterrupt(digitalPinToInterrupt(limitYp), pauseSystemYp, HIGH);
+        attachInterrupt(digitalPinToInterrupt(limitXn), pauseSystemXn, HIGH);
+        attachInterrupt(digitalPinToInterrupt(limitYn), pauseSystemYn, HIGH);
         
         mode = 2;
       }
@@ -384,7 +389,7 @@ void loop()
         stepperZ.setSpeed(0);
         //stepperA.setSpeed(0);
 
-        //detachInterrupt(digitalPinToInterrupt(limitYn));
+        detachInterrupt(digitalPinToInterrupt(limitYn));
 
         stepperY.setSpeed(-moYDirection*moYSpeed);
 
@@ -408,7 +413,7 @@ void loop()
         stepperY.setSpeed(0);
         stepperY.setCurrentPosition(0);
 
-        //detachInterrupt(digitalPinToInterrupt(limitXn));
+        detachInterrupt(digitalPinToInterrupt(limitXn));
         
         stepperX.setSpeed(-moXDirection*moXSpeed);
 
@@ -437,7 +442,7 @@ void loop()
 
         stepperX.setSpeed(moXDirection*moXSpeed);
         
-        //attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, CHANGE);
+        attachInterrupt(digitalPinToInterrupt(limitYn), pauseSystemYn, HIGH);
 
         mode = mode + 1;
       }
@@ -451,7 +456,7 @@ void loop()
 
         stepperY.setSpeed(moYDirection*moYSpeed);
         
-        //attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, CHANGE);
+        attachInterrupt(digitalPinToInterrupt(limitXn), pauseSystemXn, HIGH);
 
         mode = mode + 1;
       }
@@ -491,6 +496,11 @@ void loop()
           Serial.print("Box delivered: ");
           Serial.println(countBox);
 
+          counterxp = 0;
+          counterxn = 0;
+          counteryp = 0;
+          counteryn = 0;
+
           mode = 10;
         }
         else{
@@ -518,6 +528,10 @@ void loop()
   }
   else if (paused && bStartState){
     paused = false;
+    counterxp = 0;
+    counterxn = 0;
+    counteryp = 0;
+    counteryn = 0;
     if (mode > 2){
       stepperX.disableOutputs();            // Enables the Stepper Motors
       lcd.clear();      
@@ -532,6 +546,17 @@ void loop()
   else if (mode == 3 && !paused){    
     barrierValue = analogRead(photoRes);    // current light barrier sensor value
     countGoods();                          // counter logic checks if light barrier detects goods 
+  }
+  else if (mode == 1){
+    Serial.println("limitXpState");
+    Serial.println(limitXpState);
+    Serial.println("limitXnState");
+    Serial.println(limitXnState);
+    Serial.println("limitYpState");    
+    Serial.println(limitYpState);
+    Serial.println("limitYnState");
+    Serial.println(limitYnState);
+
   }
 }
 
@@ -556,6 +581,99 @@ void pauseSystem() {
 
   // Turn on the yellow LED to indicate that the system is paused
   statusLed(2);
+}
+
+void pauseSystemXn() {
+  counterxn = counterxn + 1;
+  Serial.println("XN");
+  if (counterxn >= 20){
+    // Stop all the motors
+    stepperX.enableOutputs();     // Disables the Stepper Motors
+    paused = true;
+
+    // Print a message to the serial console
+    Serial.println("Pause");
+
+    // Print a message to the LCD display
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Paused");
+
+    // Turn on the yellow LED to indicate that the system is paused
+    statusLed(2);
+    
+  }
+  
+}
+
+void pauseSystemXp() {
+  counterxp = counterxp + 1;
+  Serial.println("XP");
+  if (counterxp >= 40){
+    // Stop all the motors
+    stepperX.enableOutputs();     // Disables the Stepper Motors
+    paused = true;
+
+    // Print a message to the serial console
+    Serial.println("Pause");
+
+    // Print a message to the LCD display
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Paused");
+
+    // Turn on the yellow LED to indicate that the system is paused
+    statusLed(2);
+    
+  }
+  
+}
+
+void pauseSystemYn() {
+  counteryn = counteryn + 1;
+  Serial.println("YN");  
+  if (counteryn >= 20){
+    // Stop all the motors
+    stepperX.enableOutputs();     // Disables the Stepper Motors
+    paused = true;
+
+    // Print a message to the serial console
+    Serial.println("Pause");
+
+    // Print a message to the LCD display
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Paused");
+
+    // Turn on the yellow LED to indicate that the system is paused
+    statusLed(2);
+    
+  }
+    
+
+}
+
+void pauseSystemYp() {
+  counteryp = counteryp + 1;
+  Serial.println("YP");
+  if (counteryp >= 20){
+    // Stop all the motors
+    stepperX.enableOutputs();     // Disables the Stepper Motors
+    paused = true;
+
+    // Print a message to the serial console
+    Serial.println("Pause");
+
+    // Print a message to the LCD display
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Paused");
+
+    // Turn on the yellow LED to indicate that the system is paused
+    statusLed(2);
+    
+  }
+    
 }
 
 
