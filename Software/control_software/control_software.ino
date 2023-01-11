@@ -15,7 +15,7 @@
 //Define LCD pins
 const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5; 
 
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 // Photo Resistor Pin
 #define photoRes PC4
@@ -349,9 +349,9 @@ void loop()
         lcd.print("Calibration");
         
         //attachInterrupt(digitalPinToInterrupt(limitXp), stopSystem, CHANGE);
-        attachInterrupt(digitalPinToInterrupt(limitYp), stopSystem, CHANGE);
-        attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, CHANGE);
-        attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, CHANGE);
+        //attachInterrupt(digitalPinToInterrupt(limitYp), stopSystem, CHANGE);
+        //attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, CHANGE);
+        //attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, CHANGE);
         
         mode = 2;
       }
@@ -384,7 +384,7 @@ void loop()
         stepperZ.setSpeed(0);
         //stepperA.setSpeed(0);
 
-        detachInterrupt(digitalPinToInterrupt(limitYn));
+        //detachInterrupt(digitalPinToInterrupt(limitYn));
 
         stepperY.setSpeed(-moYDirection*moYSpeed);
 
@@ -408,7 +408,7 @@ void loop()
         stepperY.setSpeed(0);
         stepperY.setCurrentPosition(0);
 
-        detachInterrupt(digitalPinToInterrupt(limitXn));
+        //detachInterrupt(digitalPinToInterrupt(limitXn));
         
         stepperX.setSpeed(-moXDirection*moXSpeed);
 
@@ -437,7 +437,7 @@ void loop()
 
         stepperX.setSpeed(moXDirection*moXSpeed);
         
-        attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, CHANGE);
+        //attachInterrupt(digitalPinToInterrupt(limitYn), stopSystem, CHANGE);
 
         mode = mode + 1;
       }
@@ -451,7 +451,7 @@ void loop()
 
         stepperY.setSpeed(moYDirection*moYSpeed);
         
-        attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, CHANGE);
+        //attachInterrupt(digitalPinToInterrupt(limitXn), stopSystem, CHANGE);
 
         mode = mode + 1;
       }
