@@ -1,4 +1,9 @@
-# PMS2022 Arduino and Nucleus Software
+# Software for the Product Developement of Mechatronics Systems Project 2022
+The software is used to drive a nucleo 64 fr030r8.
+The main program is named control_software.
+
+For previous Versions inspect the git History and other Branches of the Repository.
+
 For work on the Software for the Arduino and Nucleus Prozessor.
 
 Recommended Software:
